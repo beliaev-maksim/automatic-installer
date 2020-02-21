@@ -1,3 +1,4 @@
+import os
 import requests
 import json
 import shutil
@@ -30,7 +31,11 @@ class MyWindow(Ansys_Beta_Downloader_UI):
     def __init__(self, parent):
         Ansys_Beta_Downloader_UI.__init__(self, parent)
 
+        self.username_text.Value = os.environ["USERNAME"]
+        self.download_path_textbox.Value = os.environ["TEMP"]
+        # todo create a directory when execute (os.makedirs())if not exists if user enters path manually
         self._init_combobox(artifactory_dict.keys(), self.artifactory_dropmenu, "Otterfing")
+        self.artifacts_dict = {}
 
     def set_install_path(self, _unused_event):
         """Invoked when clicked on "..." set_path_button."""
@@ -44,10 +49,50 @@ class MyWindow(Ansys_Beta_Downloader_UI):
         if path:
             self.download_path_textbox.Value = path
 
-    def delete_zip_check_click(self, _unused_event):
-        """Enable or disable Download path field by checkbox"""
-        self.download_path_textbox.Enabled = self.delete_zip_check.Value
-        self.set_download_path_but.Enabled = self.delete_zip_check.Value
+    def save_question(self, event):
+        """Function is fired up when you leave field of entering password"""
+        self._add_message("Do you want to save password for {}?".format(self.artifactory_dropmenu.Value),
+                          "Save password?", "?")
+        event.Skip()  # need to skip, otherwise stuck on field
+
+    def get_artifacts_info(self, _unused_event):
+        """Populate arifact_dict with versions and available dates for these versions"""
+        # todo on change check file with passwords and grab pass from there, otherwise make focus on password field
+        server = artifactory_dict[self.artifactory_dropmenu.Value]
+        username = self.username_text.Value
+        password = self.password.Value
+        if not username or not password:
+            # todo log entry
+            return
+
+        with requests.get(server + "/artifactory/api/repositories", auth=(username, password),
+                          timeout=30) as url_request:
+            artifacts_list = json.loads(url_request.text)
+
+        for artifact in artifacts_list:
+            repo = artifact["key"]
+            if "Certified" in repo:
+                version = repo.split("_")[0]
+                if version not in self.artifacts_dict:
+                    self.artifacts_dict[version] = [repo, []]
+
+        for version in self.artifacts_dict:
+            repo = self.artifacts_dict[version][0]
+            url = server + "/artifactory/api/storage/" + repo + "?list&deep=0&listFolders=1"
+            with requests.get(url, auth=(username, password), timeout=30) as url_request:
+                folder_dict_list = json.loads(url_request.text)['files']
+
+            builds_dates = self.artifacts_dict[version][1]
+            for folder_dict in folder_dict_list:
+                folder_name = folder_dict['uri'][1:]
+                try:
+                    builds_dates.append(int(folder_name))
+                except ValueError:
+                    pass
+
+        self._init_combobox(self.artifacts_dict.keys(), self.version_dropmenu, sorted(self.artifacts_dict.keys())[-1])
+        builds_dates = self.artifacts_dict[self.version_dropmenu.Value][1]
+        self._init_combobox(builds_dates, self.date_dropmenu, max(builds_dates))
 
     @staticmethod
     def _path_dialogue(which_dir):
@@ -68,7 +113,7 @@ class MyWindow(Ansys_Beta_Downloader_UI):
         Input parameters
         :param entry_list: List of text entries to appear in the combobox element
         :param combobox: object pointing to the combobox element
-        :param default_value: (optional9 default value (must be present in the entry list, otherwise will be ignored)
+        :param default_value: (optional default value (must be present in the entry list, otherwise will be ignored)
 
         Outputs
         :return: None
@@ -80,6 +125,29 @@ class MyWindow(Ansys_Beta_Downloader_UI):
                 index = i
             combobox.Append(v)
         combobox.SetSelection(index)
+
+    @staticmethod
+    def _add_message(message, title="", icon="?"):
+        """
+        Create a dialog with different set of buttons
+        :param message: Message you want to show
+        :param title:
+        :param icon: depending on the input will create either question dialogue (?), error (!) or just information
+        :return Answer of the user eg wx.OK
+        """
+
+        if icon == "?":
+            icon = wx.OK | wx.CANCEL | wx.ICON_QUESTION
+        elif icon == "!":
+            icon = wx.OK | wx.ICON_ERROR
+        else:
+            icon = wx.OK | wx.ICON_INFORMATION
+
+        dlg_qdel = wx.MessageDialog(None, message, title, icon)
+        result = dlg_qdel.ShowModal()
+        dlg_qdel.Destroy()
+
+        return result
 
 
 def main():

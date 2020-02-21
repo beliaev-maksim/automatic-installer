@@ -15,10 +15,10 @@ import wx.adv
 ## Class Ansys_Beta_Downloader_UI
 ###########################################################################
 
-class Ansys_Beta_Downloader_UI (wx.Frame):
+class Ansys_Beta_Downloader_UI ( wx.Frame ):
 
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size(700,550), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size( 700,550 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
 
 		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 
@@ -28,14 +28,14 @@ class Ansys_Beta_Downloader_UI (wx.Frame):
 
 		bSizer261 = wx.BoxSizer( wx.HORIZONTAL )
 
-		bSizer261.SetMinSize( wx.Size(100,50) )
+		bSizer261.SetMinSize( wx.Size( 100,50 ) )
 
 		bSizer261.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
 		self.m_staticText1221 = wx.StaticText( self, wx.ID_ANY, u"Configuration", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticText1221.Wrap( -1 )
 
-		self.m_staticText1221.SetFont( wx.Font(14, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, wx.EmptyString) )
+		self.m_staticText1221.SetFont( wx.Font( 14, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, wx.EmptyString ) )
 
 		bSizer261.Add( self.m_staticText1221, 0, wx.ALL, 5 )
 
@@ -57,13 +57,13 @@ class Ansys_Beta_Downloader_UI (wx.Frame):
 
 		bSizer15 = wx.BoxSizer( wx.HORIZONTAL )
 
-		self.install_path = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size(300,-1), 0 )
-		bSizer15.Add( self.install_path, 0, wx.ALL, 5 )
+		self.install_path_textbox = wx.TextCtrl( self, wx.ID_ANY, u"C:\\Program Files\\AnsysEM", wx.DefaultPosition, wx.Size( 300,-1 ), 0 )
+		bSizer15.Add( self.install_path_textbox, 0, wx.ALL, 5 )
 
 
 		bSizer15.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
-		self.set_install_path_but = wx.Button( self, wx.ID_ANY, u"...", wx.DefaultPosition, wx.Size(30,30), 0 )
+		self.set_install_path_but = wx.Button( self, wx.ID_ANY, u"...", wx.DefaultPosition, wx.Size( 30,30 ), 0 )
 		bSizer15.Add( self.set_install_path_but, 0, wx.ALL, 5 )
 
 
@@ -84,7 +84,7 @@ class Ansys_Beta_Downloader_UI (wx.Frame):
 
 		bSizer152 = wx.BoxSizer( wx.HORIZONTAL )
 
-		self.password = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size(300,-1), wx.TE_PASSWORD )
+		self.password = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 300,-1 ), wx.TE_PASSWORD )
 		self.password.SetToolTip( u"Retrieval of Artifactory Encrypted Password Instructions:\n\n1. Log into Artifactory\n\n2. Click on your username (top right)\n\n3. Enter your password to Unlock Artifactory Encrypted Password\n\n[Note] You cannot use the same artifactory password for other artifactories. Also, your encrypted password will change anytime your SSO password changes." )
 
 		bSizer152.Add( self.password, 0, wx.ALL, 5 )
@@ -103,18 +103,22 @@ class Ansys_Beta_Downloader_UI (wx.Frame):
 
 		bSizer45 = wx.BoxSizer( wx.VERTICAL )
 
-		self.m_checkBox1 = wx.CheckBox( self, wx.ID_ANY, u"Delete downloaded ZIP and directory", wx.DefaultPosition, wx.DefaultSize, 0 )
-		bSizer45.Add( self.m_checkBox1, 0, wx.ALL, 5 )
+		self.delete_zip_check = wx.CheckBox( self, wx.ID_ANY, u"Delete downloaded ZIP and directory", wx.DefaultPosition, wx.DefaultSize, 0 )
+		bSizer45.Add( self.delete_zip_check, 0, wx.ALL, 5 )
 
 		bSizer151 = wx.BoxSizer( wx.HORIZONTAL )
 
-		self.download_path = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size(300,-1), 0 )
-		bSizer151.Add( self.download_path, 0, wx.ALL, 5 )
+		self.download_path_textbox = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 300,-1 ), 0 )
+		self.download_path_textbox.Enable( False )
+
+		bSizer151.Add( self.download_path_textbox, 0, wx.ALL, 5 )
 
 
 		bSizer151.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
-		self.set_download_path_but = wx.Button( self, wx.ID_ANY, u"...", wx.DefaultPosition, wx.Size(30,30), 0 )
+		self.set_download_path_but = wx.Button( self, wx.ID_ANY, u"...", wx.DefaultPosition, wx.Size( 30,30 ), 0 )
+		self.set_download_path_but.Enable( False )
+
 		bSizer151.Add( self.set_download_path_but, 0, wx.ALL, 5 )
 
 
@@ -137,7 +141,7 @@ class Ansys_Beta_Downloader_UI (wx.Frame):
 		bSizer41.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
 		artifactory_dropmenuChoices = []
-		self.artifactory_dropmenu = wx.ComboBox( self, wx.ID_ANY, u"Combo!", wx.DefaultPosition, wx.Size(250,-1), artifactory_dropmenuChoices, 0 )
+		self.artifactory_dropmenu = wx.ComboBox( self, wx.ID_ANY, u"Combo!", wx.DefaultPosition, wx.Size( 250,-1 ), artifactory_dropmenuChoices, 0 )
 		bSizer41.Add( self.artifactory_dropmenu, 0, wx.ALL, 5 )
 
 
@@ -157,7 +161,7 @@ class Ansys_Beta_Downloader_UI (wx.Frame):
 		bSizer42.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
 		version_dropmenuChoices = []
-		self.version_dropmenu = wx.ComboBox( self, wx.ID_ANY, u"Combo!", wx.DefaultPosition, wx.Size(250,-1), version_dropmenuChoices, 0 )
+		self.version_dropmenu = wx.ComboBox( self, wx.ID_ANY, u"Combo!", wx.DefaultPosition, wx.Size( 250,-1 ), version_dropmenuChoices, 0 )
 		bSizer42.Add( self.version_dropmenu, 0, wx.ALL, 5 )
 
 
@@ -177,7 +181,7 @@ class Ansys_Beta_Downloader_UI (wx.Frame):
 		bSizer421.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
 		date_dropmenuChoices = []
-		self.date_dropmenu = wx.ComboBox( self, wx.ID_ANY, u"Combo!", wx.DefaultPosition, wx.Size(250,-1), date_dropmenuChoices, 0 )
+		self.date_dropmenu = wx.ComboBox( self, wx.ID_ANY, u"Combo!", wx.DefaultPosition, wx.Size( 250,-1 ), date_dropmenuChoices, 0 )
 		bSizer421.Add( self.date_dropmenu, 0, wx.ALL, 5 )
 
 
@@ -193,8 +197,8 @@ class Ansys_Beta_Downloader_UI (wx.Frame):
 
 		bSizer271.Add( self.m_staticText18, 0, wx.ALL, 5 )
 
-		self.m_textCtrl10 = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size(300,-1), 0 )
-		self.m_textCtrl10.SetToolTip( u"Product    Product Flag\nMechanical APDL    -mechapdl\nANSYS Customization Files    -ansyscust\nANSYS Autodyn    -autodyn\nANSYS LS-DYNA    -lsdyna\nANSYS CFD-Post    -cfdpost\nANSYS CFX    -cfx\nANSYS EnSight    -ensight\nANSYS TurboGrid    -turbogrid\nANSYS Fluent    -fluent\nANSYS Polyflow    -polyflow\nANSYS ICEM CFD    -icemcfd\nANSYS Forte    -forte\nANSYS Chemkin    -chemkinpro\nANSYS Energico    -energico\nANSYS FENSAP-ICE    -fensapice\nANSYS Reaction Workbench    -reactionwb\nANSYS Model Fuel Library (Encrypted)    -mfl\n# Note Installing any of the above products will install ANSYS Workbench\nANSYS Remote Solve Manager Standalone Services    -rsm\nParasolid Geometry Interface    -parasolid\nACIS Geometry Interface    -acis\nNX Geometry Interface Plugin    -ug_plugin\nANSYS Icepak    -icepak\nCATIA 5 Reader    -catia5_reader" )
+		self.m_textCtrl10 = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 300,-1 ), 0 )
+		self.m_textCtrl10.SetToolTip( u"Product\tProduct Flag\nMechanical APDL\t-mechapdl\nANSYS Customization Files\t-ansyscust\nANSYS Autodyn\t-autodyn\nANSYS LS-DYNA\t-lsdyna\nANSYS CFD-Post\t-cfdpost\nANSYS CFX\t-cfx\nANSYS EnSight\t-ensight\nANSYS TurboGrid\t-turbogrid\nANSYS Fluent\t-fluent\nANSYS Polyflow\t-polyflow\nANSYS ICEM CFD\t-icemcfd\nANSYS Forte\t-forte\nANSYS Chemkin\t-chemkinpro\nANSYS Energico\t-energico\nANSYS FENSAP-ICE\t-fensapice\nANSYS Reaction Workbench\t-reactionwb\nANSYS Model Fuel Library (Encrypted)\t-mfl\n# Note Installing any of the above products will install ANSYS Workbench\nANSYS Remote Solve Manager Standalone Services\t-rsm\nParasolid Geometry Interface\t-parasolid\nACIS Geometry Interface\t-acis\nNX Geometry Interface Plugin\t-ug_plugin\nANSYS Icepak\t-icepak\nCATIA 5 Reader\t-catia5_reader" )
 
 		bSizer271.Add( self.m_textCtrl10, 3, wx.ALL, 5 )
 
@@ -216,14 +220,14 @@ class Ansys_Beta_Downloader_UI (wx.Frame):
 
 		bSizer26 = wx.BoxSizer( wx.HORIZONTAL )
 
-		bSizer26.SetMinSize( wx.Size(100,50) )
+		bSizer26.SetMinSize( wx.Size( 100,50 ) )
 
 		bSizer26.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
 		self.m_staticText122 = wx.StaticText( self, wx.ID_ANY, u"Autoupdate Scheduler", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticText122.Wrap( -1 )
 
-		self.m_staticText122.SetFont( wx.Font(14, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, wx.EmptyString) )
+		self.m_staticText122.SetFont( wx.Font( 14, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, wx.EmptyString ) )
 
 		bSizer26.Add( self.m_staticText122, 0, wx.ALL, 5 )
 
@@ -333,14 +337,14 @@ class Ansys_Beta_Downloader_UI (wx.Frame):
 
 		bSizer262 = wx.BoxSizer( wx.HORIZONTAL )
 
-		bSizer262.SetMinSize( wx.Size(100,50) )
+		bSizer262.SetMinSize( wx.Size( 100,50 ) )
 
 		bSizer262.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
 		self.m_staticText1222 = wx.StaticText( self, wx.ID_ANY, u"Manual Update", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticText1222.Wrap( -1 )
 
-		self.m_staticText1222.SetFont( wx.Font(14, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, wx.EmptyString) )
+		self.m_staticText1222.SetFont( wx.Font( 14, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, wx.EmptyString ) )
 
 		bSizer262.Add( self.m_staticText1222, 0, wx.ALL, 5 )
 
@@ -363,7 +367,7 @@ class Ansys_Beta_Downloader_UI (wx.Frame):
 
 		bSizer30.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
-		self.install_edt_but = wx.Button( self, wx.ID_ANY, u"Install Electronics Desktop", wx.DefaultPosition, wx.Size(-1,-1), 0 )
+		self.install_edt_but = wx.Button( self, wx.ID_ANY, u"Install Electronics Desktop", wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
 		bSizer30.Add( self.install_edt_but, 0, 0, 5 )
 
 
@@ -383,7 +387,7 @@ class Ansys_Beta_Downloader_UI (wx.Frame):
 
 		bSizer301.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
-		self.install_wb_but = wx.Button( self, wx.ID_ANY, u"Install Workbench (latest)", wx.DefaultPosition, wx.Size(-1,-1), 0 )
+		self.install_wb_but = wx.Button( self, wx.ID_ANY, u"Install Workbench (latest)", wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
 		bSizer301.Add( self.install_wb_but, 0, 0, 5 )
 
 
@@ -419,13 +423,29 @@ class Ansys_Beta_Downloader_UI (wx.Frame):
 		bSizer1.Add( bSizer3, 5, wx.EXPAND, 5 )
 
 
-		self.SetSizer(bSizer1)
+		self.SetSizer( bSizer1 )
 		self.Layout()
 		self.m_statusBar1 = self.CreateStatusBar( 1, wx.STB_SIZEGRIP, wx.ID_ANY )
 
 		self.Centre( wx.BOTH )
 
-	def __del__(self):
+		# Connect Events
+		self.set_install_path_but.Bind( wx.EVT_BUTTON, self.set_install_path )
+		self.delete_zip_check.Bind( wx.EVT_CHECKBOX, self.delete_zip_check_click )
+		self.set_download_path_but.Bind( wx.EVT_BUTTON, self.set_download_path )
+
+	def __del__( self ):
 		pass
+
+
+	# Virtual event handlers, overide them in your derived class
+	def set_install_path( self, event ):
+		event.Skip()
+
+	def delete_zip_check_click( self, event ):
+		event.Skip()
+
+	def set_download_path( self, event ):
+		event.Skip()
 
 

@@ -14,6 +14,7 @@
         <property name="file">downloader_ui_src</property>
         <property name="first_id">1000</property>
         <property name="help_provider">none</property>
+        <property name="image_path_wrapper_function_name"></property>
         <property name="indent_with_spaces"></property>
         <property name="internationalize">0</property>
         <property name="name">MyProject1</property>
@@ -25,6 +26,7 @@
         <property name="skip_php_events">1</property>
         <property name="skip_python_events">1</property>
         <property name="ui_table">UI</property>
+        <property name="use_array_enum">0</property>
         <property name="use_enum">0</property>
         <property name="use_microsoft_bom">0</property>
         <object class="Frame" expanded="1">
@@ -337,7 +339,7 @@
                                                 <property name="minimize_button">0</property>
                                                 <property name="minimum_size"></property>
                                                 <property name="moveable">1</property>
-                                                <property name="name">install_path</property>
+                                                <property name="name">install_path_textbox</property>
                                                 <property name="pane_border">1</property>
                                                 <property name="pane_position"></property>
                                                 <property name="pane_size"></property>
@@ -355,7 +357,7 @@
                                                 <property name="validator_style">wxFILTER_NONE</property>
                                                 <property name="validator_type">wxDefaultValidator</property>
                                                 <property name="validator_variable"></property>
-                                                <property name="value"></property>
+                                                <property name="value">C:\Program Files\AnsysEM</property>
                                                 <property name="window_extra_style"></property>
                                                 <property name="window_name"></property>
                                                 <property name="window_style"></property>
@@ -384,6 +386,7 @@
                                                 <property name="aui_name"></property>
                                                 <property name="aui_position"></property>
                                                 <property name="aui_row"></property>
+                                                <property name="auth_needed">0</property>
                                                 <property name="best_size"></property>
                                                 <property name="bg"></property>
                                                 <property name="bitmap"></property>
@@ -441,6 +444,7 @@
                                                 <property name="window_extra_style"></property>
                                                 <property name="window_name"></property>
                                                 <property name="window_style"></property>
+                                                <event name="OnButtonClick">set_install_path</event>
                                             </object>
                                         </object>
                                     </object>
@@ -770,7 +774,7 @@
                                         <property name="minimize_button">0</property>
                                         <property name="minimum_size"></property>
                                         <property name="moveable">1</property>
-                                        <property name="name">m_checkBox1</property>
+                                        <property name="name">delete_zip_check</property>
                                         <property name="pane_border">1</property>
                                         <property name="pane_position"></property>
                                         <property name="pane_size"></property>
@@ -791,6 +795,7 @@
                                         <property name="window_extra_style"></property>
                                         <property name="window_name"></property>
                                         <property name="window_style"></property>
+                                        <event name="OnCheckBox">delete_zip_check_click</event>
                                     </object>
                                 </object>
                                 <object class="sizeritem" expanded="0">
@@ -827,7 +832,7 @@
                                                 <property name="dock">Dock</property>
                                                 <property name="dock_fixed">0</property>
                                                 <property name="docking">Left</property>
-                                                <property name="enabled">1</property>
+                                                <property name="enabled">0</property>
                                                 <property name="fg"></property>
                                                 <property name="floatable">1</property>
                                                 <property name="font"></property>
@@ -842,7 +847,7 @@
                                                 <property name="minimize_button">0</property>
                                                 <property name="minimum_size"></property>
                                                 <property name="moveable">1</property>
-                                                <property name="name">download_path</property>
+                                                <property name="name">download_path_textbox</property>
                                                 <property name="pane_border">1</property>
                                                 <property name="pane_position"></property>
                                                 <property name="pane_size"></property>
@@ -889,6 +894,7 @@
                                                 <property name="aui_name"></property>
                                                 <property name="aui_position"></property>
                                                 <property name="aui_row"></property>
+                                                <property name="auth_needed">0</property>
                                                 <property name="best_size"></property>
                                                 <property name="bg"></property>
                                                 <property name="bitmap"></property>
@@ -905,7 +911,7 @@
                                                 <property name="dock">Dock</property>
                                                 <property name="dock_fixed">0</property>
                                                 <property name="docking">Left</property>
-                                                <property name="enabled">1</property>
+                                                <property name="enabled">0</property>
                                                 <property name="fg"></property>
                                                 <property name="floatable">1</property>
                                                 <property name="focus"></property>
@@ -946,6 +952,7 @@
                                                 <property name="window_extra_style"></property>
                                                 <property name="window_name"></property>
                                                 <property name="window_style"></property>
+                                                <event name="OnButtonClick">set_download_path</event>
                                             </object>
                                         </object>
                                     </object>
@@ -2647,6 +2654,7 @@
                                                 <property name="aui_name"></property>
                                                 <property name="aui_position"></property>
                                                 <property name="aui_row"></property>
+                                                <property name="auth_needed">0</property>
                                                 <property name="best_size"></property>
                                                 <property name="bg"></property>
                                                 <property name="bitmap"></property>
@@ -2760,6 +2768,7 @@
                                                 <property name="aui_name"></property>
                                                 <property name="aui_position"></property>
                                                 <property name="aui_row"></property>
+                                                <property name="auth_needed">0</property>
                                                 <property name="best_size"></property>
                                                 <property name="bg"></property>
                                                 <property name="bitmap"></property>
@@ -3131,6 +3140,7 @@
                                                         <property name="aui_name"></property>
                                                         <property name="aui_position"></property>
                                                         <property name="aui_row"></property>
+                                                        <property name="auth_needed">0</property>
                                                         <property name="best_size"></property>
                                                         <property name="bg"></property>
                                                         <property name="bitmap"></property>
@@ -3246,6 +3256,7 @@
                                                 <property name="aui_name"></property>
                                                 <property name="aui_position"></property>
                                                 <property name="aui_row"></property>
+                                                <property name="auth_needed">0</property>
                                                 <property name="best_size"></property>
                                                 <property name="bg"></property>
                                                 <property name="bitmap"></property>
@@ -3371,6 +3382,7 @@
                                         <property name="aui_name"></property>
                                         <property name="aui_position"></property>
                                         <property name="aui_row"></property>
+                                        <property name="auth_needed">0</property>
                                         <property name="best_size"></property>
                                         <property name="bg"></property>
                                         <property name="bitmap"></property>

@@ -4,6 +4,7 @@ import json
 import shutil
 import wx
 from collections import OrderedDict
+import pathlib
 from downloader_ui_src import Ansys_Beta_Downloader_UI
 
 artifactory_dict = OrderedDict([
@@ -27,12 +28,30 @@ artifactory_dict = OrderedDict([
 ])
 
 
+# todo check if WB exists make automatic integration with EDT
+# todo check that timectrl is 24h format
 class MyWindow(Ansys_Beta_Downloader_UI):
     def __init__(self, parent):
         Ansys_Beta_Downloader_UI.__init__(self, parent)
 
         self.username_text.Value = os.environ["USERNAME"]
         self.download_path_textbox.Value = os.environ["TEMP"]
+        self.install_path_textbox.Value = self._get_previous_edt_path()
+        appdata = os.environ["APPDATA"]
+        self.settings_folder = os.path.join(appdata, "build_downloader")
+
+        if not os.path.isdir(self.settings_folder):
+            os.mkdir(self.settings_folder)
+
+        self.password_json = os.path.join(self.settings_folder, "pass.json")
+        self.password_dict = {}
+        # todo read passwords on open
+
+        # setup tasks viewlist
+        self.schtasks_viewlist.AppendTextColumn('Tool', width=75)
+        self.schtasks_viewlist.AppendTextColumn('Version', width=50)
+        self.schtasks_viewlist.AppendTextColumn('Schedule', width=175)
+
         # todo create a directory when execute (os.makedirs())if not exists if user enters path manually
         self._init_combobox(artifactory_dict.keys(), self.artifactory_dropmenu, "Otterfing")
         self.artifacts_dict = {}
@@ -51,16 +70,22 @@ class MyWindow(Ansys_Beta_Downloader_UI):
 
     def save_question(self, event):
         """Function is fired up when you leave field of entering password"""
-        self._add_message("Do you want to save password for {}?".format(self.artifactory_dropmenu.Value),
-                          "Save password?", "?")
+        answer = self._add_message("Do you want to save password for {}?".format(self.artifactory_dropmenu.Value),
+                                   "Save password?", "?")
         event.Skip()  # need to skip, otherwise stuck on field
+
+        if answer == wx.ID_OK:
+            self.password_dict[self.artifactory_dropmenu.Value] = self.password.Value
+            with open(self.password_json, "w") as file:
+                json.dump(self.password_dict, file)
 
     def get_artifacts_info(self, _unused_event):
         """Populate arifact_dict with versions and available dates for these versions"""
         # todo on change check file with passwords and grab pass from there, otherwise make focus on password field
         server = artifactory_dict[self.artifactory_dropmenu.Value]
         username = self.username_text.Value
-        password = self.password.Value
+        password = self.password_dict.get(self.artifactory_dropmenu.Value, "")
+        self.password.Value = password
         if not username or not password:
             # todo log entry
             return
@@ -69,6 +94,7 @@ class MyWindow(Ansys_Beta_Downloader_UI):
                           timeout=30) as url_request:
             artifacts_list = json.loads(url_request.text)
 
+        # todo handle error on wrong pass
         for artifact in artifacts_list:
             repo = artifact["key"]
             if "Certified" in repo:
@@ -93,6 +119,21 @@ class MyWindow(Ansys_Beta_Downloader_UI):
         self._init_combobox(self.artifacts_dict.keys(), self.version_dropmenu, sorted(self.artifacts_dict.keys())[-1])
         builds_dates = self.artifacts_dict[self.version_dropmenu.Value][1]
         self._init_combobox(builds_dates, self.date_dropmenu, max(builds_dates))
+
+    @staticmethod
+    def _get_previous_edt_path():
+        """Function which returns path of EDT installation based on environment variable"""
+        all_vars = os.environ
+        env_var = ""
+        for key in all_vars:
+            if "ANSYSEM" in key:
+                env_var = all_vars[key]
+
+        if env_var:
+            edt_root = str(pathlib.Path(env_var).parent.parent)
+            return edt_root
+        else:
+            return ""
 
     @staticmethod
     def _path_dialogue(which_dir):

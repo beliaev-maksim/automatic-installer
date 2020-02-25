@@ -10,6 +10,7 @@
 import wx
 import wx.xrc
 import wx.adv
+import wx.dataview
 
 ###########################################################################
 ## Class Ansys_Beta_Downloader_UI
@@ -62,7 +63,7 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 
 		bSizer15 = wx.BoxSizer( wx.HORIZONTAL )
 
-		self.install_path_textbox = wx.TextCtrl( self.m_panel2, wx.ID_ANY, u"C:\\Program Files\\AnsysEM", wx.DefaultPosition, wx.Size( 300,-1 ), 0 )
+		self.install_path_textbox = wx.TextCtrl( self.m_panel2, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 300,-1 ), 0 )
 		bSizer15.Add( self.install_path_textbox, 0, wx.ALL, 5 )
 
 
@@ -101,6 +102,26 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 
 		bSizer2.Add( bSizer431, 1, wx.EXPAND, 5 )
 
+		self.m_staticline4 = wx.StaticLine( self.m_panel2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
+		bSizer2.Add( self.m_staticline4, 0, wx.EXPAND |wx.ALL, 5 )
+
+		bSizer41 = wx.BoxSizer( wx.HORIZONTAL )
+
+		self.m_staticText11 = wx.StaticText( self.m_panel2, wx.ID_ANY, u"Artifactory", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText11.Wrap( -1 )
+
+		bSizer41.Add( self.m_staticText11, 0, wx.ALL, 5 )
+
+
+		bSizer41.Add( ( 0, 0), 1, wx.EXPAND, 5 )
+
+		artifactory_dropmenuChoices = []
+		self.artifactory_dropmenu = wx.ComboBox( self.m_panel2, wx.ID_ANY, u"Combo!", wx.DefaultPosition, wx.Size( 250,-1 ), artifactory_dropmenuChoices, wx.CB_READONLY )
+		bSizer41.Add( self.artifactory_dropmenu, 0, wx.ALL, 5 )
+
+
+		bSizer2.Add( bSizer41, 1, wx.EXPAND, 5 )
+
 		bSizer43 = wx.BoxSizer( wx.VERTICAL )
 
 		self.m_staticText13 = wx.StaticText( self.m_panel2, wx.ID_ANY, u"Artifactory Encrypted Password", wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -129,7 +150,7 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 
 		bSizer45 = wx.BoxSizer( wx.VERTICAL )
 
-		self.delete_zip_check = wx.CheckBox( self.m_panel2, wx.ID_ANY, u"Delete downloaded ZIP and directory", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.delete_zip_check = wx.CheckBox( self.m_panel2, wx.ID_ANY, u"Delete downloaded ZIP", wx.DefaultPosition, wx.DefaultSize, 0 )
 		bSizer45.Add( self.delete_zip_check, 0, wx.ALL, 5 )
 
 		bSizer151 = wx.BoxSizer( wx.HORIZONTAL )
@@ -151,26 +172,6 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 
 		bSizer2.Add( bSizer45, 2, wx.EXPAND, 5 )
 
-		self.m_staticline4 = wx.StaticLine( self.m_panel2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
-		bSizer2.Add( self.m_staticline4, 0, wx.EXPAND |wx.ALL, 5 )
-
-		bSizer41 = wx.BoxSizer( wx.HORIZONTAL )
-
-		self.m_staticText11 = wx.StaticText( self.m_panel2, wx.ID_ANY, u"Artifactory", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_staticText11.Wrap( -1 )
-
-		bSizer41.Add( self.m_staticText11, 0, wx.ALL, 5 )
-
-
-		bSizer41.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-		artifactory_dropmenuChoices = []
-		self.artifactory_dropmenu = wx.ComboBox( self.m_panel2, wx.ID_ANY, u"Combo!", wx.DefaultPosition, wx.Size( 250,-1 ), artifactory_dropmenuChoices, wx.CB_READONLY )
-		bSizer41.Add( self.artifactory_dropmenu, 0, wx.ALL, 5 )
-
-
-		bSizer2.Add( bSizer41, 1, wx.EXPAND, 5 )
-
 		self.m_staticline5 = wx.StaticLine( self.m_panel2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
 		bSizer2.Add( self.m_staticline5, 0, wx.EXPAND |wx.ALL, 5 )
 
@@ -190,26 +191,6 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 
 
 		bSizer2.Add( bSizer42, 1, wx.EXPAND, 5 )
-
-		self.m_staticline6 = wx.StaticLine( self.m_panel2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
-		bSizer2.Add( self.m_staticline6, 0, wx.EXPAND |wx.ALL, 5 )
-
-		bSizer421 = wx.BoxSizer( wx.HORIZONTAL )
-
-		self.m_staticText121 = wx.StaticText( self.m_panel2, wx.ID_ANY, u"Date (EDT Only)", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_staticText121.Wrap( -1 )
-
-		bSizer421.Add( self.m_staticText121, 0, wx.ALL, 5 )
-
-
-		bSizer421.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-		date_dropmenuChoices = []
-		self.date_dropmenu = wx.ComboBox( self.m_panel2, wx.ID_ANY, u"Combo!", wx.DefaultPosition, wx.Size( 250,-1 ), date_dropmenuChoices, wx.CB_READONLY )
-		bSizer421.Add( self.date_dropmenu, 0, wx.ALL, 5 )
-
-
-		bSizer2.Add( bSizer421, 1, wx.EXPAND, 5 )
 
 		self.m_staticline8 = wx.StaticLine( self.m_panel2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
 		bSizer2.Add( self.m_staticline8, 0, wx.EXPAND |wx.ALL, 5 )
@@ -231,6 +212,45 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 
 
 		bSizer2.Add( bSizer271, 1, wx.EXPAND, 5 )
+
+		bSizer57 = wx.BoxSizer( wx.VERTICAL )
+
+		self.m_staticline13 = wx.StaticLine( self.m_panel2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
+		bSizer57.Add( self.m_staticline13, 0, wx.EXPAND |wx.ALL, 5 )
+
+		bSizer27 = wx.BoxSizer( wx.VERTICAL )
+
+
+		bSizer27.Add( ( 0, 0), 1, wx.EXPAND, 5 )
+
+		bSizer30 = wx.BoxSizer( wx.HORIZONTAL )
+
+
+		bSizer30.Add( ( 0, 0), 1, wx.EXPAND, 5 )
+
+		self.install_edt_but = wx.Button( self.m_panel2, wx.ID_ANY, u"Install Electronics Desktop", wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
+		bSizer30.Add( self.install_edt_but, 0, 0, 5 )
+
+
+		bSizer30.Add( ( 0, 0), 1, wx.EXPAND, 5 )
+
+		self.install_wb_but = wx.Button( self.m_panel2, wx.ID_ANY, u"Install Workbench", wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
+		bSizer30.Add( self.install_wb_but, 0, 0, 5 )
+
+
+		bSizer30.Add( ( 0, 0), 1, wx.EXPAND, 5 )
+
+
+		bSizer27.Add( bSizer30, 3, wx.EXPAND, 5 )
+
+
+		bSizer27.Add( ( 0, 0), 1, wx.EXPAND, 5 )
+
+
+		bSizer57.Add( bSizer27, 1, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND, 5 )
+
+
+		bSizer2.Add( bSizer57, 1, wx.EXPAND, 5 )
 
 
 		bSizer32.Add( bSizer2, 5, wx.EXPAND, 5 )
@@ -345,89 +365,16 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 
 		bSizer56.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
+		self.schtasks_viewlist = wx.dataview.DataViewListCtrl( self.m_panel2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.schtasks_viewlist.SetMinSize( wx.Size( -1,250 ) )
 
-		bSizer56.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-
-		bSizer56.Add( ( 0, 0), 1, wx.EXPAND, 5 )
+		bSizer56.Add( self.schtasks_viewlist, 0, wx.ALL|wx.EXPAND, 5 )
 
 
 		bSizer3.Add( bSizer56, 1, wx.EXPAND, 5 )
 
 		self.m_staticline11 = wx.StaticLine( self.m_panel2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
 		bSizer3.Add( self.m_staticline11, 0, wx.EXPAND |wx.ALL, 5 )
-
-		bSizer57 = wx.BoxSizer( wx.VERTICAL )
-
-		bSizer262 = wx.BoxSizer( wx.HORIZONTAL )
-
-		bSizer262.SetMinSize( wx.Size( 100,50 ) )
-
-		bSizer262.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-		self.m_staticText1222 = wx.StaticText( self.m_panel2, wx.ID_ANY, u"Manual Update", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_staticText1222.Wrap( -1 )
-
-		self.m_staticText1222.SetFont( wx.Font( 14, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, wx.EmptyString ) )
-
-		bSizer262.Add( self.m_staticText1222, 0, wx.ALL, 5 )
-
-
-		bSizer262.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-
-		bSizer57.Add( bSizer262, 0, wx.EXPAND, 5 )
-
-		self.m_staticline13 = wx.StaticLine( self.m_panel2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
-		bSizer57.Add( self.m_staticline13, 0, wx.EXPAND |wx.ALL, 5 )
-
-		bSizer27 = wx.BoxSizer( wx.VERTICAL )
-
-
-		bSizer27.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-		bSizer30 = wx.BoxSizer( wx.HORIZONTAL )
-
-
-		bSizer30.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-		self.install_edt_but = wx.Button( self.m_panel2, wx.ID_ANY, u"Install Electronics Desktop", wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
-		bSizer30.Add( self.install_edt_but, 0, 0, 5 )
-
-
-		bSizer30.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-
-		bSizer27.Add( bSizer30, 3, wx.EXPAND, 5 )
-
-
-		bSizer27.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-
-		bSizer57.Add( bSizer27, 1, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND, 5 )
-
-		bSizer301 = wx.BoxSizer( wx.HORIZONTAL )
-
-
-		bSizer301.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-		self.install_wb_but = wx.Button( self.m_panel2, wx.ID_ANY, u"Install Workbench (latest)", wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
-		bSizer301.Add( self.install_wb_but, 0, 0, 5 )
-
-
-		bSizer301.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-
-		bSizer57.Add( bSizer301, 1, wx.EXPAND, 5 )
-
-
-		bSizer57.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-
-		bSizer57.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-
-		bSizer3.Add( bSizer57, 1, wx.EXPAND, 5 )
 
 		bSizer62 = wx.BoxSizer( wx.HORIZONTAL )
 
@@ -461,10 +408,10 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 
 		# Connect Events
 		self.set_install_path_but.Bind( wx.EVT_BUTTON, self.set_install_path )
+		self.artifactory_dropmenu.Bind( wx.EVT_COMBOBOX, self.get_artifacts_info )
 		self.password.Bind( wx.EVT_KILL_FOCUS, self.save_question )
 		self.delete_zip_check.Bind( wx.EVT_CHECKBOX, self.delete_zip_check_click )
 		self.set_download_path_but.Bind( wx.EVT_BUTTON, self.set_download_path )
-		self.artifactory_dropmenu.Bind( wx.EVT_COMBOBOX, self.get_artifacts_info )
 
 	def __del__( self ):
 		pass
@@ -474,6 +421,9 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 	def set_install_path( self, event ):
 		event.Skip()
 
+	def get_artifacts_info( self, event ):
+		event.Skip()
+
 	def save_question( self, event ):
 		event.Skip()
 
@@ -481,9 +431,6 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 		event.Skip()
 
 	def set_download_path( self, event ):
-		event.Skip()
-
-	def get_artifacts_info( self, event ):
 		event.Skip()
 
 

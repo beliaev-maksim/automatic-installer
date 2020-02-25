@@ -402,7 +402,7 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 
 		self.SetSizer( bSizer1 )
 		self.Layout()
-		self.m_statusBar1 = self.CreateStatusBar( 1, wx.STB_SIZEGRIP, wx.ID_ANY )
+		self.status_bar = self.CreateStatusBar( 1, wx.STB_SIZEGRIP, wx.ID_ANY )
 
 		self.Centre( wx.BOTH )
 

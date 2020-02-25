@@ -30,6 +30,7 @@ artifactory_dict = OrderedDict([
 
 # todo check if WB exists make automatic integration with EDT
 # todo check that timectrl is 24h format
+# todo add windows notification when build is updated (maybe if password is wrong but need to check that it persists)
 class MyWindow(Ansys_Beta_Downloader_UI):
     def __init__(self, parent):
         Ansys_Beta_Downloader_UI.__init__(self, parent)
@@ -70,9 +71,13 @@ class MyWindow(Ansys_Beta_Downloader_UI):
 
     def save_question(self, event):
         """Function is fired up when you leave field of entering password"""
+        event.Skip()  # need to skip, otherwise stuck on field
+
+        if not self.password.Value:
+            return
+
         answer = self._add_message("Do you want to save password for {}?".format(self.artifactory_dropmenu.Value),
                                    "Save password?", "?")
-        event.Skip()  # need to skip, otherwise stuck on field
 
         if answer == wx.ID_OK:
             self.password_dict[self.artifactory_dropmenu.Value] = self.password.Value
@@ -85,14 +90,21 @@ class MyWindow(Ansys_Beta_Downloader_UI):
         server = artifactory_dict[self.artifactory_dropmenu.Value]
         username = self.username_text.Value
         password = self.password_dict.get(self.artifactory_dropmenu.Value, "")
+        # todo check if called after password changed and not save then we get password.Value otherwise dictionary
         self.password.Value = password
         if not username or not password:
-            # todo log entry
+            self.status_bar.SetStatusText("Please provide username and artifactory password")
             return
 
-        with requests.get(server + "/artifactory/api/repositories", auth=(username, password),
-                          timeout=30) as url_request:
-            artifacts_list = json.loads(url_request.text)
+        try:
+            with requests.get(server + "/api/repositories", auth=(username, password),
+                              timeout=30) as url_request:
+                artifacts_list = json.loads(url_request.text)
+        except requests.exceptions.ReadTimeout:
+            self.status_bar.SetStatusText("Timeout on connection, " +
+                                          "please verify your username and password for {}".format(
+                                              self.artifactory_dropmenu.Value))
+            return
 
         # todo handle error on wrong pass
         for artifact in artifacts_list:
@@ -104,7 +116,7 @@ class MyWindow(Ansys_Beta_Downloader_UI):
 
         for version in self.artifacts_dict:
             repo = self.artifacts_dict[version][0]
-            url = server + "/artifactory/api/storage/" + repo + "?list&deep=0&listFolders=1"
+            url = server + "/api/storage/" + repo + "?list&deep=0&listFolders=1"
             with requests.get(url, auth=(username, password), timeout=30) as url_request:
                 folder_dict_list = json.loads(url_request.text)['files']
 
@@ -118,7 +130,7 @@ class MyWindow(Ansys_Beta_Downloader_UI):
 
         self._init_combobox(self.artifacts_dict.keys(), self.version_dropmenu, sorted(self.artifacts_dict.keys())[-1])
         builds_dates = self.artifacts_dict[self.version_dropmenu.Value][1]
-        self._init_combobox(builds_dates, self.date_dropmenu, max(builds_dates))
+
 
     @staticmethod
     def _get_previous_edt_path():

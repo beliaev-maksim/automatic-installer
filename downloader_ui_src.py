@@ -320,11 +320,6 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 		self.m_timePicker1 = wx.adv.TimePickerCtrl( self.m_panel2, wx.ID_ANY, wx.DefaultDateTime, wx.DefaultPosition, wx.DefaultSize, wx.adv.TP_DEFAULT )
 		bSizer51.Add( self.m_timePicker1, 0, wx.ALL, 5 )
 
-		self.m_staticText20 = wx.StaticText( self.m_panel2, wx.ID_ANY, u"(24h format)", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_staticText20.Wrap( -1 )
-
-		bSizer51.Add( self.m_staticText20, 0, wx.ALL, 5 )
-
 
 		bSizer56.Add( bSizer51, 0, wx.EXPAND, 5 )
 

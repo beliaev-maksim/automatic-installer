@@ -2,9 +2,12 @@ import os
 import requests
 import json
 import shutil
+import subprocess
 import wx
+import re
 from collections import OrderedDict
 import pathlib
+import xml.etree.ElementTree as ET
 from downloader_ui_src import Ansys_Beta_Downloader_UI
 
 artifactory_dict = OrderedDict([
@@ -29,8 +32,9 @@ artifactory_dict = OrderedDict([
 
 
 # todo check if WB exists make automatic integration with EDT
-# todo check that timectrl is 24h format
 # todo add windows notification when build is updated (maybe if password is wrong but need to check that it persists)
+# todo create a function that alternates statusbar color on error message self.StatusBar.SetForegroundColour(wx.RED)
+# todo https://wxpython.org/Phoenix/docs/html/wx.adv.NotificationMessage.html
 class MyWindow(Ansys_Beta_Downloader_UI):
     def __init__(self, parent):
         Ansys_Beta_Downloader_UI.__init__(self, parent)
@@ -56,6 +60,8 @@ class MyWindow(Ansys_Beta_Downloader_UI):
         # todo create a directory when execute (os.makedirs())if not exists if user enters path manually
         self._init_combobox(artifactory_dict.keys(), self.artifactory_dropmenu, "Otterfing")
         self.artifacts_dict = {}
+
+        self.get_active_schtasks()
 
     def set_install_path(self, _unused_event):
         """Invoked when clicked on "..." set_path_button."""
@@ -130,6 +136,34 @@ class MyWindow(Ansys_Beta_Downloader_UI):
 
         self._init_combobox(self.artifacts_dict.keys(), self.version_dropmenu, sorted(self.artifacts_dict.keys())[-1])
         builds_dates = self.artifacts_dict[self.version_dropmenu.Value][1]
+
+    def get_active_schtasks(self):
+        """Function to get schtasks that are already scheduled for EDT and WB"""
+        command = r"schtasks /query /xml"
+        all_tasks = subprocess.check_output(command, shell=True).decode("ascii", errors="ignore")
+        #schtasks = ET.fromstring(all_tasks)
+        all_tasks = all_tasks.split("\r\n\r\n\r\n")
+
+        for task in all_tasks:
+            if "AnsysDownloader" in task:
+                break
+
+        task = "\n".join(task.replace("\r\n", "").split("\r")[1:])  # remove empty lines
+
+        schtasks = ET.fromstring(task)
+        ns = {"win": re.search("{(.*)}Task", schtasks.tag).group(1)}  # name space
+
+        calendar_trig = schtasks.find("win:Triggers/win:CalendarTrigger", ns)
+        start_boundary = calendar_trig.find("win:StartBoundary", ns).text
+        days = calendar_trig.find("win:ScheduleByWeek/win:DaysOfWeek", ns)
+        for day in days:
+            print(day.tag)
+        print(start_boundary)
+
+        uri = schtasks.find("win:RegistrationInfo/win:URI", ns)
+        name = uri.text.split("\\")[2]
+        product, version = name.split("_")
+        print(product, version)
 
 
     @staticmethod

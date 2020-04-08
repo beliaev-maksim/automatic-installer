@@ -410,6 +410,8 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 		self.password_field.Bind( wx.EVT_KILL_FOCUS, self.save_question )
 		self.delete_zip_check.Bind( wx.EVT_CHECKBOX, self.delete_zip_check_click )
 		self.set_download_path_but.Bind( wx.EVT_BUTTON, self.set_download_path )
+		self.install_edt_but.Bind( wx.EVT_BUTTON, self.install_edt_click )
+		self.install_wb_but.Bind( wx.EVT_BUTTON, self.install_wb_click )
 
 	def __del__( self ):
 		pass
@@ -429,6 +431,12 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 		event.Skip()
 
 	def set_download_path( self, event ):
+		event.Skip()
+
+	def install_edt_click( self, event ):
+		event.Skip()
+
+	def install_wb_click( self, event ):
 		event.Skip()
 
 

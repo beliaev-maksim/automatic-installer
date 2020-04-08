@@ -3,6 +3,8 @@ import requests
 import json
 import shutil
 import subprocess
+import threading
+import time
 import wx
 import re
 from collections import OrderedDict
@@ -37,6 +39,53 @@ days_dict = {"Monday": "Mo",
              "Friday": "Fr",
              "Saturday": "Sa",
              "Sunday": "Su"}
+
+# signal - status bar
+NEW_SIGNAL_EVT_BAR = wx.NewEventType()
+SIGNAL_EVT_BAR = wx.PyEventBinder(NEW_SIGNAL_EVT_BAR, 1)
+
+
+class SignalEvent(wx.PyCommandEvent):
+    """Event to signal that we are ready to update the plot"""
+    def __init__(self, etype, eid):
+        """Creates the event object"""
+        wx.PyCommandEvent.__init__(self, etype, eid)
+
+
+class FlashStatusBarThread(threading.Thread):
+    def __init__(self, parent):
+        """
+        @param parent: The gui object that should receive the value
+        """
+        threading.Thread.__init__(self)
+        self._parent = parent
+
+    def run(self):
+        """Overrides Thread.run. Don't call this directly its called internally
+        when you call Thread.start().
+
+        alternates the color of the status bar for run_sec (6s) to take attention
+        at the end clears the status message
+        """
+
+        if self._parent.bar_level == "i":
+            alternating_color = wx.GREEN
+        elif self._parent.bar_level == "!":
+            alternating_color = wx.RED
+
+        run_sec = 6
+        for i in range(run_sec*2):
+            self._parent.bar_color = wx.WHITE if i % 2 == 0 else alternating_color
+
+            if i == run_sec*2 - 1:
+                self._parent.bar_text = ""
+                self._parent.bar_color = wx.WHITE
+
+            evt = SignalEvent(NEW_SIGNAL_EVT_BAR, -1)
+            wx.PostEvent(self._parent, evt)
+
+            time.sleep(0.5)
+
 
 # todo check if WB exists make automatic integration with EDT
 # todo add windows notification when build is updated (maybe if password is wrong but need to check that it persists)
@@ -74,6 +123,29 @@ class MyWindow(Ansys_Beta_Downloader_UI):
 
         self.password_field.Value = self.password_dict.get(self.artifactory_dropmenu.Value, "")
 
+        # bind custom event to invoke function on_signal
+        self.Bind(SIGNAL_EVT_BAR, self.set_status_bar)
+
+    def set_status_bar(self, _unused_event=None):
+        self.status_bar.SetStatusText(self.bar_text)
+        self.status_bar.SetBackgroundColour(self.bar_color)
+        self.status_bar.Refresh()
+
+    def add_status_msg(self, msg="", level="i"):
+        """
+        Function that creates a thread to add a status bar message with alternating color to take attention of the user
+        :param msg: str, message text
+        :param level: either "i" as information for green color or "!" as error for red color
+        :return: None
+        """
+        self.bar_text = msg
+        self.bar_level = level
+        self.bar_color = wx.WHITE
+
+        # start a thread to update status bar
+        self.worker = FlashStatusBarThread(self)
+        self.worker.start()
+
     def set_install_path(self, _unused_event):
         """Invoked when clicked on "..." set_path_button."""
         path = self._path_dialogue("Install")
@@ -90,27 +162,28 @@ class MyWindow(Ansys_Beta_Downloader_UI):
         """Function is fired up when you leave field of entering password"""
         event.Skip()  # need to skip, otherwise stuck on field
 
-        if not self.password.Value:
+        # todo check that password is not already in the list
+        if not self.password_field.Value:
             return
 
         answer = self._add_message("Do you want to save password for {}?".format(self.artifactory_dropmenu.Value),
                                    "Save password?", "?")
 
         if answer == wx.ID_OK:
-            self.password_dict[self.artifactory_dropmenu.Value] = self.password.Value
+            self.password_dict[self.artifactory_dropmenu.Value] = self.password_field.Value
             with open(self.password_json, "w") as file:
                 json.dump(self.password_dict, file)
 
-    def get_artifacts_info(self, _unused_event):
+    def get_artifacts_info(self, _unused_event=None):
         """Populate arifact_dict with versions and available dates for these versions"""
         # todo on change check file with passwords and grab pass from there, otherwise make focus on password field
         server = artifactory_dict[self.artifactory_dropmenu.Value]
         username = self.username_text.Value
         password = self.password_dict.get(self.artifactory_dropmenu.Value, "")
         # todo check if called after password changed and not save then we get password.Value otherwise dictionary
-        self.password.Value = password
+        self.password_field.Value = password
         if not username or not password:
-            self.status_bar.SetStatusText("Please provide username and artifactory password")
+            self.add_status_msg("Please provide username and artifactory password", "!")
             return
 
         try:
@@ -118,12 +191,19 @@ class MyWindow(Ansys_Beta_Downloader_UI):
                               timeout=30) as url_request:
                 artifacts_list = json.loads(url_request.text)
         except requests.exceptions.ReadTimeout:
-            self.status_bar.SetStatusText("Timeout on connection, " +
-                                          "please verify your username and password for {}".format(
-                                              self.artifactory_dropmenu.Value))
+            self.add_status_msg("Timeout on connection, please verify your username and password for {}".format(
+                self.artifactory_dropmenu.Value), "!")
             return
 
-        # todo handle error on wrong pass
+        # catch 401 for bad credentials or similar
+        if "errors" in artifacts_list:
+            if artifacts_list["errors"][0]["status"] == 401:
+                self.add_status_msg("Bad credentials, please verify your username and password for {}".format(
+                    self.artifactory_dropmenu.Value), "!")
+            else:
+                self.add_status_msg(artifacts_list["errors"][0]["message"], "!")
+            return
+
         for artifact in artifacts_list:
             repo = artifact["key"]
             if "Certified" in repo:
@@ -147,6 +227,7 @@ class MyWindow(Ansys_Beta_Downloader_UI):
 
         self._init_combobox(self.artifacts_dict.keys(), self.version_dropmenu, sorted(self.artifacts_dict.keys())[-1])
         builds_dates = self.artifacts_dict[self.version_dropmenu.Value][1]
+        print(self.artifacts_dict)
 
     def get_active_schtasks(self):
         """
@@ -165,6 +246,9 @@ class MyWindow(Ansys_Beta_Downloader_UI):
                 self.schtasks_viewlist.AppendItem([task_data_dict["product"],
                                                   task_data_dict["version"],
                                                   schedule_time])
+
+    def install_edt_click(self, _unused_event=None):
+        self.get_artifacts_info()
 
     @staticmethod
     def get_task_details(task):

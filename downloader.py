@@ -30,6 +30,13 @@ artifactory_dict = OrderedDict([
     ('Waterloo', r'http://watatsrv01.ansys.com:8080/artifactory')
 ])
 
+days_dict = {"Monday": "Mo",
+             "Tuesday": "Tu",
+             "Wednesday": "We",
+             "Thursday": "Th",
+             "Friday": "Fr",
+             "Saturday": "Sa",
+             "Sunday": "Su"}
 
 # todo check if WB exists make automatic integration with EDT
 # todo add windows notification when build is updated (maybe if password is wrong but need to check that it persists)
@@ -48,20 +55,24 @@ class MyWindow(Ansys_Beta_Downloader_UI):
         if not os.path.isdir(self.settings_folder):
             os.mkdir(self.settings_folder)
 
-        self.password_json = os.path.join(self.settings_folder, "pass.json")
-        self.password_dict = {}
-        # todo read passwords on open
-
         # setup tasks viewlist
-        self.schtasks_viewlist.AppendTextColumn('Tool', width=75)
+        self.schtasks_viewlist.AppendTextColumn('Product', width=60)
         self.schtasks_viewlist.AppendTextColumn('Version', width=50)
         self.schtasks_viewlist.AppendTextColumn('Schedule', width=175)
+        self.get_active_schtasks()
 
         # todo create a directory when execute (os.makedirs())if not exists if user enters path manually
         self._init_combobox(artifactory_dict.keys(), self.artifactory_dropmenu, "Otterfing")
         self.artifacts_dict = {}
 
-        self.get_active_schtasks()
+        self.password_json = os.path.join(self.settings_folder, "pass.json")
+        if os.path.isfile(self.password_json):
+            with open(self.password_json) as file:
+                self.password_dict = json.load(file)
+        else:
+            self.password_dict = {}
+
+        self.password_field.Value = self.password_dict.get(self.artifactory_dropmenu.Value, "")
 
     def set_install_path(self, _unused_event):
         """Invoked when clicked on "..." set_path_button."""
@@ -138,15 +149,38 @@ class MyWindow(Ansys_Beta_Downloader_UI):
         builds_dates = self.artifacts_dict[self.version_dropmenu.Value][1]
 
     def get_active_schtasks(self):
-        """Function to get schtasks that are already scheduled for EDT and WB"""
+        """
+        Function to get schtasks that are already scheduled for EDT and WB
+        UI is updated with this info
+        """
+
         command = r"schtasks /query /xml"
         all_tasks = subprocess.check_output(command, shell=True).decode("ascii", errors="ignore")
-        #schtasks = ET.fromstring(all_tasks)
         all_tasks = all_tasks.split("\r\n\r\n\r\n")
 
         for task in all_tasks:
             if "AnsysDownloader" in task:
-                break
+                task_data_dict = self.get_task_details(task)
+                schedule_time = ", ".join(task_data_dict["days"]) + " at " + task_data_dict["time"]
+                self.schtasks_viewlist.AppendItem([task_data_dict["product"],
+                                                  task_data_dict["version"],
+                                                  schedule_time])
+
+    @staticmethod
+    def get_task_details(task):
+        """
+        Function that extracts parameters of individual task
+        :param task: XML string contained all data about the task
+        :return task_data_dict = {"days": [],
+                                  "time": "00:00",
+                                  "product": "EDT",
+                                  "version": "v201"}
+        """
+
+        task_data_dict = {"days": [],
+                          "time": "00:00",
+                          "product": "EDT",
+                          "version": "v201"}
 
         task = "\n".join(task.replace("\r\n", "").split("\r")[1:])  # remove empty lines
 
@@ -157,14 +191,15 @@ class MyWindow(Ansys_Beta_Downloader_UI):
         start_boundary = calendar_trig.find("win:StartBoundary", ns).text
         days = calendar_trig.find("win:ScheduleByWeek/win:DaysOfWeek", ns)
         for day in days:
-            print(day.tag)
-        print(start_boundary)
+            day_name = days_dict[day.tag.split("}")[1]]
+            task_data_dict["days"].append(day_name)
+
+        task_data_dict["time"] = start_boundary.split("T")[1][:-3]
 
         uri = schtasks.find("win:RegistrationInfo/win:URI", ns)
         name = uri.text.split("\\")[2]
-        product, version = name.split("_")
-        print(product, version)
-
+        task_data_dict["product"], task_data_dict["version"] = name.split("_")
+        return task_data_dict
 
     @staticmethod
     def _get_previous_edt_path():
@@ -176,7 +211,7 @@ class MyWindow(Ansys_Beta_Downloader_UI):
                 env_var = all_vars[key]
 
         if env_var:
-            edt_root = str(pathlib.Path(env_var).parent.parent)
+            edt_root = str(pathlib.Path(env_var).parent.parent.parent)
             return edt_root
         else:
             return ""

@@ -56,7 +56,7 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 
 		bSizer4 = wx.BoxSizer( wx.VERTICAL )
 
-		self.m_staticText1 = wx.StaticText( self.m_panel2, wx.ID_ANY, u"Installation Path", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText1 = wx.StaticText( self.m_panel2, wx.ID_ANY, u"Installation Root Path", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticText1.Wrap( -1 )
 
 		bSizer4.Add( self.m_staticText1, 0, wx.ALL, 5 )
@@ -64,6 +64,8 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 		bSizer15 = wx.BoxSizer( wx.HORIZONTAL )
 
 		self.install_path_textbox = wx.TextCtrl( self.m_panel2, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 300,-1 ), 0 )
+		self.install_path_textbox.SetToolTip( u"Root path would be appended by:\n\\AnsysEM\\AnsysEMXX.X for EDT\nor \n\\ANSYS Inc\\vXXX for WB" )
+
 		bSizer15.Add( self.install_path_textbox, 0, wx.ALL, 5 )
 
 
@@ -131,10 +133,10 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 
 		bSizer152 = wx.BoxSizer( wx.HORIZONTAL )
 
-		self.password = wx.TextCtrl( self.m_panel2, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 300,-1 ), wx.TE_PASSWORD )
-		self.password.SetToolTip( u"Retrieval of Artifactory Encrypted Password Instructions:\n\n1. Log into Artifactory\n\n2. Click on your username (top right)\n\n3. Enter your password to Unlock Artifactory Encrypted Password\n\n[Note] You cannot use the same artifactory password for other artifactories. Also, your encrypted password will change anytime your SSO password changes." )
+		self.password_field = wx.TextCtrl( self.m_panel2, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 300,-1 ), wx.TE_PASSWORD )
+		self.password_field.SetToolTip( u"Retrieval of Artifactory Encrypted Password Instructions:\n\n1. Log into Artifactory\n\n2. Click on your username (top right)\n\n3. Enter your password to Unlock Artifactory Encrypted Password\n\n[Note] You cannot use the same artifactory password for other artifactories. Also, your encrypted password will change anytime your SSO password changes." )
 
-		bSizer152.Add( self.password, 0, wx.ALL, 5 )
+		bSizer152.Add( self.password_field, 0, wx.ALL, 5 )
 
 
 		bSizer152.Add( ( 0, 0), 1, wx.EXPAND, 5 )
@@ -151,6 +153,7 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 		bSizer45 = wx.BoxSizer( wx.VERTICAL )
 
 		self.delete_zip_check = wx.CheckBox( self.m_panel2, wx.ID_ANY, u"Delete downloaded ZIP", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.delete_zip_check.SetValue(True)
 		bSizer45.Add( self.delete_zip_check, 0, wx.ALL, 5 )
 
 		bSizer151 = wx.BoxSizer( wx.HORIZONTAL )
@@ -304,7 +307,7 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 		self.sa_check = wx.CheckBox( self.m_panel2, wx.ID_ANY, u"Sa", wx.DefaultPosition, wx.DefaultSize, 0 )
 		bSizer50.Add( self.sa_check, 0, wx.ALL, 5 )
 
-		self.so_check = wx.CheckBox( self.m_panel2, wx.ID_ANY, u"So", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.so_check = wx.CheckBox( self.m_panel2, wx.ID_ANY, u"Su", wx.DefaultPosition, wx.DefaultSize, 0 )
 		bSizer50.Add( self.so_check, 0, wx.ALL, 5 )
 
 
@@ -404,7 +407,7 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 		# Connect Events
 		self.set_install_path_but.Bind( wx.EVT_BUTTON, self.set_install_path )
 		self.artifactory_dropmenu.Bind( wx.EVT_COMBOBOX, self.get_artifacts_info )
-		self.password.Bind( wx.EVT_KILL_FOCUS, self.save_question )
+		self.password_field.Bind( wx.EVT_KILL_FOCUS, self.save_question )
 		self.delete_zip_check.Bind( wx.EVT_CHECKBOX, self.delete_zip_check_click )
 		self.set_download_path_but.Bind( wx.EVT_BUTTON, self.set_download_path )
 

@@ -159,29 +159,48 @@ class MyWindow(Ansys_Beta_Downloader_UI):
             self.download_path_textbox.Value = path
 
     def save_question(self, event):
-        """Function is fired up when you leave field of entering password"""
+        """
+            Function is fired up when you leave field of entering password:
+            Updates password dictionary and possibly json file
+            Runs get_artifacts_info to get available versions
+        """
         event.Skip()  # need to skip, otherwise stuck on field
 
-        # todo check that password is not already in the list
-        if not self.password_field.Value:
+        # erase_pass: password key exists and user wants to delete it, thus question is needed
+        erase_pass = not self.password_field.Value and self.password_dict.get(self.artifactory_dropmenu.Value, "")
+        password_not_changed = self.password_field.Value == self.password_dict.get(self.artifactory_dropmenu.Value, "")
+
+        if (not self.password_field.Value or password_not_changed) and not erase_pass:
             return
 
         answer = self._add_message("Do you want to save password for {}?".format(self.artifactory_dropmenu.Value),
                                    "Save password?", "?")
 
-        if answer == wx.ID_OK:
+        if answer == wx.ID_YES:
             self.password_dict[self.artifactory_dropmenu.Value] = self.password_field.Value
             with open(self.password_json, "w") as file:
                 json.dump(self.password_dict, file)
 
+        self.get_artifacts_info()
+
+    def populate_password(self, _unused_event=None):
+        """
+            Callback on change of artifact drop menu
+            Fills the password field and calls get_artifacts_info
+        """
+        self.password_field.Value = self.password_dict.get(self.artifactory_dropmenu.Value, "")
+        self.get_artifacts_info()
+
     def get_artifacts_info(self, _unused_event=None):
-        """Populate arifact_dict with versions and available dates for these versions"""
-        # todo on change check file with passwords and grab pass from there, otherwise make focus on password field
+        """
+            Populate arifact_dict with versions and available dates for these versions
+        """
+        self._init_combobox([], self.version_dropmenu)
+
         server = artifactory_dict[self.artifactory_dropmenu.Value]
         username = self.username_text.Value
-        password = self.password_dict.get(self.artifactory_dropmenu.Value, "")
-        # todo check if called after password changed and not save then we get password.Value otherwise dictionary
-        self.password_field.Value = password
+        password = self.password_field.Value
+
         if not username or not password:
             self.add_status_msg("Please provide username and artifactory password", "!")
             return
@@ -204,10 +223,15 @@ class MyWindow(Ansys_Beta_Downloader_UI):
                 self.add_status_msg(artifacts_list["errors"][0]["message"], "!")
             return
 
+        # fill the dictionary with EBU and WB keys since builds could be different
         for artifact in artifacts_list:
             repo = artifact["key"]
-            if "Certified" in repo:
-                version = repo.split("_")[0]
+            if "EBU_Certified" in repo:
+                version = repo.split("_")[0] + "_EBU"
+                if version not in self.artifacts_dict:
+                    self.artifacts_dict[version] = [repo, []]
+            elif "Certified" in repo:
+                version = repo.split("_")[0] + "_WB"
                 if version not in self.artifacts_dict:
                     self.artifacts_dict[version] = [repo, []]
 
@@ -226,8 +250,6 @@ class MyWindow(Ansys_Beta_Downloader_UI):
                     pass
 
         self._init_combobox(self.artifacts_dict.keys(), self.version_dropmenu, sorted(self.artifacts_dict.keys())[-1])
-        builds_dates = self.artifacts_dict[self.version_dropmenu.Value][1]
-        print(self.artifacts_dict)
 
     def get_active_schtasks(self):
         """
@@ -287,7 +309,9 @@ class MyWindow(Ansys_Beta_Downloader_UI):
 
     @staticmethod
     def _get_previous_edt_path():
-        """Function which returns path of EDT installation based on environment variable"""
+        """
+        Function which returns path of EDT installation based on environment variable
+        """
         all_vars = os.environ
         env_var = ""
         for key in all_vars:
@@ -343,7 +367,7 @@ class MyWindow(Ansys_Beta_Downloader_UI):
         """
 
         if icon == "?":
-            icon = wx.OK | wx.CANCEL | wx.ICON_QUESTION
+            icon = wx.YES | wx.NO | wx.ICON_QUESTION
         elif icon == "!":
             icon = wx.OK | wx.ICON_ERROR
         else:

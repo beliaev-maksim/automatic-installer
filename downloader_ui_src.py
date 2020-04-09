@@ -180,7 +180,7 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 
 		bSizer42 = wx.BoxSizer( wx.HORIZONTAL )
 
-		self.m_staticText12 = wx.StaticText( self.m_panel2, wx.ID_ANY, u"Version", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText12 = wx.StaticText( self.m_panel2, wx.ID_ANY, u"Version and Product", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticText12.Wrap( -1 )
 
 		bSizer42.Add( self.m_staticText12, 0, wx.ALL, 5 )
@@ -189,7 +189,9 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 		bSizer42.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
 		version_dropmenuChoices = []
-		self.version_dropmenu = wx.ComboBox( self.m_panel2, wx.ID_ANY, u"Combo!", wx.DefaultPosition, wx.Size( 250,-1 ), version_dropmenuChoices, wx.CB_READONLY )
+		self.version_dropmenu = wx.ComboBox( self.m_panel2, wx.ID_ANY, u"Combo!", wx.DefaultPosition, wx.Size( 150,-1 ), version_dropmenuChoices, wx.CB_READONLY )
+		self.version_dropmenu.SetToolTip( u"Some artifactory may have different Product + Version available. This will vary from arti to arti" )
+
 		bSizer42.Add( self.version_dropmenu, 0, wx.ALL, 5 )
 
 
@@ -231,14 +233,10 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 
 		bSizer30.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
-		self.install_edt_but = wx.Button( self.m_panel2, wx.ID_ANY, u"Install Electronics Desktop", wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
-		bSizer30.Add( self.install_edt_but, 0, 0, 5 )
+		self.install_once_button = wx.Button( self.m_panel2, wx.ID_ANY, u"Install Once", wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
+		self.install_once_button.SetToolTip( u"Will install once latest available build for selected product and version" )
 
-
-		bSizer30.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-		self.install_wb_but = wx.Button( self.m_panel2, wx.ID_ANY, u"Install Workbench", wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
-		bSizer30.Add( self.install_wb_but, 0, 0, 5 )
+		bSizer30.Add( self.install_once_button, 0, 0, 5 )
 
 
 		bSizer30.Add( ( 0, 0), 1, wx.EXPAND, 5 )
@@ -334,31 +332,16 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 
 		bSizer521.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
-		self.m_button201 = wx.Button( self.m_panel2, wx.ID_ANY, u"Schedule Autoupdate EDT", wx.DefaultPosition, wx.DefaultSize, 0 )
-		bSizer521.Add( self.m_button201, 1, wx.EXPAND, 5 )
+		self.schedule_button = wx.Button( self.m_panel2, wx.ID_ANY, u"Schedule Autoupdate", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.schedule_button.SetToolTip( u"Will schedule autoinstallation of lastest available build for selected product and version" )
+
+		bSizer521.Add( self.schedule_button, 1, wx.EXPAND, 5 )
 
 
 		bSizer521.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
 
 		bSizer56.Add( bSizer521, 0, wx.EXPAND, 5 )
-
-
-		bSizer56.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-		bSizer52 = wx.BoxSizer( wx.HORIZONTAL )
-
-
-		bSizer52.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-		self.m_button20 = wx.Button( self.m_panel2, wx.ID_ANY, u"Schedule Autoupdate WB", wx.DefaultPosition, wx.DefaultSize, 0 )
-		bSizer52.Add( self.m_button20, 1, wx.EXPAND, 5 )
-
-
-		bSizer52.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-
-		bSizer56.Add( bSizer52, 0, wx.EXPAND, 5 )
 
 
 		bSizer56.Add( ( 0, 0), 1, wx.EXPAND, 5 )
@@ -406,12 +389,11 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 
 		# Connect Events
 		self.set_install_path_but.Bind( wx.EVT_BUTTON, self.set_install_path )
-		self.artifactory_dropmenu.Bind( wx.EVT_COMBOBOX, self.get_artifacts_info )
+		self.artifactory_dropmenu.Bind( wx.EVT_COMBOBOX, self.populate_password )
 		self.password_field.Bind( wx.EVT_KILL_FOCUS, self.save_question )
 		self.delete_zip_check.Bind( wx.EVT_CHECKBOX, self.delete_zip_check_click )
 		self.set_download_path_but.Bind( wx.EVT_BUTTON, self.set_download_path )
-		self.install_edt_but.Bind( wx.EVT_BUTTON, self.install_edt_click )
-		self.install_wb_but.Bind( wx.EVT_BUTTON, self.install_wb_click )
+		self.install_once_button.Bind( wx.EVT_BUTTON, self.install_edt_click )
 
 	def __del__( self ):
 		pass
@@ -421,7 +403,7 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 	def set_install_path( self, event ):
 		event.Skip()
 
-	def get_artifacts_info( self, event ):
+	def populate_password( self, event ):
 		event.Skip()
 
 	def save_question( self, event ):
@@ -434,9 +416,6 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 		event.Skip()
 
 	def install_edt_click( self, event ):
-		event.Skip()
-
-	def install_wb_click( self, event ):
 		event.Skip()
 
 

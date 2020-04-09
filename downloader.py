@@ -1,6 +1,7 @@
 import os
 import requests
 import json
+from datetime import datetime
 import shutil
 import subprocess
 import threading
@@ -32,13 +33,6 @@ artifactory_dict = OrderedDict([
     ('Waterloo', r'http://watatsrv01.ansys.com:8080/artifactory')
 ])
 
-days_dict = {"Monday": "Mo",
-             "Tuesday": "Tu",
-             "Wednesday": "We",
-             "Thursday": "Th",
-             "Friday": "Fr",
-             "Saturday": "Sa",
-             "Sunday": "Su"}
 
 # signal - status bar
 NEW_SIGNAL_EVT_BAR = wx.NewEventType()
@@ -89,7 +83,6 @@ class FlashStatusBarThread(threading.Thread):
 
 # todo check if WB exists make automatic integration with EDT
 # todo add windows notification when build is updated (maybe if password is wrong but need to check that it persists)
-# todo create a function that alternates statusbar color on error message self.StatusBar.SetForegroundColour(wx.RED)
 # todo https://wxpython.org/Phoenix/docs/html/wx.adv.NotificationMessage.html
 class MyWindow(Ansys_Beta_Downloader_UI):
     def __init__(self, parent):
@@ -103,6 +96,14 @@ class MyWindow(Ansys_Beta_Downloader_UI):
 
         if not os.path.isdir(self.settings_folder):
             os.mkdir(self.settings_folder)
+
+        self.days_checkboxes = {"mo": self.mo_check,
+                                "tu": self.tu_check,
+                                "we": self.we_check,
+                                "th": self.th_check,
+                                "fr": self.fr_check,
+                                "sa": self.sa_check,
+                                "su": self.su_check}
 
         # setup tasks viewlist
         self.schtasks_viewlist.AppendTextColumn('Product', width=60)
@@ -121,15 +122,77 @@ class MyWindow(Ansys_Beta_Downloader_UI):
         else:
             self.password_dict = {}
 
-        self.password_field.Value = self.password_dict.get(self.artifactory_dropmenu.Value, "")
-
         # bind custom event to invoke function on_signal
         self.Bind(SIGNAL_EVT_BAR, self.set_status_bar)
 
+        if not self.read_settings():
+            # file with defaults does not exist
+            self.time_picker.Value = datetime.strptime("23:00:00", '%H:%M:%S')
+            self.populate_password()
+        else:
+            self.get_artifacts_info()
+
     def set_status_bar(self, _unused_event=None):
+        """
+        This function is bound to the event that serves to flash status bar
+        :param _unused_event: used only by UI
+        :return: None
+        """
         self.status_bar.SetStatusText(self.bar_text)
         self.status_bar.SetBackgroundColour(self.bar_color)
         self.status_bar.Refresh()
+
+    def save_settings(self, settings_file="default_settings"):
+        """
+        Function to save current configuration of settings to the file
+        :param settings_file: file name to write settings
+        :return: None
+        """
+        setting_dict = {
+            "install_path": self.install_path_textbox.Value,
+            "username": self.username_text.Value,
+            "artifactory": self.artifactory_dropmenu.Value,
+            "password": self.password_field.Value,
+            "delete_zip": self.delete_zip_check.Value,
+            "download_path": self.download_path_textbox.Value,
+            "version": self.version_dropmenu.Value,
+            "wb_flags": self.wb_flags_text.Value,
+            "days": [key for key, val in self.days_checkboxes.items() if val.Value],
+            "time": self.time_picker.Value.FormatISOTime()
+        }
+
+        settings_path = os.path.join(self.settings_folder, settings_file + ".json")
+        with open(settings_path, "w") as file:
+            json.dump(setting_dict, file, indent=4)
+
+    def read_settings(self, settings_file="default_settings"):
+        """
+        Function to read settings and fill the UI
+        :param settings_file: file name from which to read settings
+        :return: False if settings_file does not exist else True
+        """
+        settings_path = os.path.join(self.settings_folder, settings_file + ".json")
+
+        if not os.path.isfile(settings_path):
+            return False
+
+        with open(settings_path, "r") as file:
+            setting_dict = json.load(file)
+
+        self.install_path_textbox.Value = setting_dict["install_path"]
+        self.username_text.Value = setting_dict["username"]
+        self.artifactory_dropmenu.Value = setting_dict["artifactory"]
+        self.password_field.Value = setting_dict["password"]
+        self.delete_zip_check.Value = setting_dict["delete_zip"]
+        self.download_path_textbox.Value = setting_dict["download_path"]
+        self.version_dropmenu.Value = setting_dict["version"]
+        self.wb_flags_text.Value = setting_dict["wb_flags"]
+        self.time_picker.Value = datetime.strptime(setting_dict["time"], '%H:%M:%S')
+
+        for day in setting_dict["days"]:
+            self.days_checkboxes[day].Value = True
+
+        return True
 
     def add_status_msg(self, msg="", level="i"):
         """
@@ -182,6 +245,9 @@ class MyWindow(Ansys_Beta_Downloader_UI):
                 json.dump(self.password_dict, file)
 
         self.get_artifacts_info()
+
+    def save_default_click(self, _unused_event=None):
+        self.save_settings()
 
     def populate_password(self, _unused_event=None):
         """
@@ -297,7 +363,7 @@ class MyWindow(Ansys_Beta_Downloader_UI):
         start_boundary = calendar_trig.find("win:StartBoundary", ns).text
         days = calendar_trig.find("win:ScheduleByWeek/win:DaysOfWeek", ns)
         for day in days:
-            day_name = days_dict[day.tag.split("}")[1]]
+            day_name = day.tag.split("}")[1][:3]
             task_data_dict["days"].append(day_name)
 
         task_data_dict["time"] = start_boundary.split("T")[1][:-3]

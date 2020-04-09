@@ -207,10 +207,10 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 
 		bSizer271.Add( self.m_staticText18, 0, wx.ALL, 5 )
 
-		self.m_textCtrl10 = wx.TextCtrl( self.m_panel2, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 300,-1 ), 0 )
-		self.m_textCtrl10.SetToolTip( u"Product\tProduct Flag\nMechanical APDL\t-mechapdl\nANSYS Customization Files\t-ansyscust\nANSYS Autodyn\t-autodyn\nANSYS LS-DYNA\t-lsdyna\nANSYS CFD-Post\t-cfdpost\nANSYS CFX\t-cfx\nANSYS EnSight\t-ensight\nANSYS TurboGrid\t-turbogrid\nANSYS Fluent\t-fluent\nANSYS Polyflow\t-polyflow\nANSYS ICEM CFD\t-icemcfd\nANSYS Forte\t-forte\nANSYS Chemkin\t-chemkinpro\nANSYS Energico\t-energico\nANSYS FENSAP-ICE\t-fensapice\nANSYS Reaction Workbench\t-reactionwb\nANSYS Model Fuel Library (Encrypted)\t-mfl\n# Note Installing any of the above products will install ANSYS Workbench\nANSYS Remote Solve Manager Standalone Services\t-rsm\nParasolid Geometry Interface\t-parasolid\nACIS Geometry Interface\t-acis\nNX Geometry Interface Plugin\t-ug_plugin\nANSYS Icepak\t-icepak\nCATIA 5 Reader\t-catia5_reader" )
+		self.wb_flags_text = wx.TextCtrl( self.m_panel2, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 300,-1 ), 0 )
+		self.wb_flags_text.SetToolTip( u"Product\tProduct Flag\nMechanical APDL\t-mechapdl\nANSYS Customization Files\t-ansyscust\nANSYS Autodyn\t-autodyn\nANSYS LS-DYNA\t-lsdyna\nANSYS CFD-Post\t-cfdpost\nANSYS CFX\t-cfx\nANSYS EnSight\t-ensight\nANSYS TurboGrid\t-turbogrid\nANSYS Fluent\t-fluent\nANSYS Polyflow\t-polyflow\nANSYS ICEM CFD\t-icemcfd\nANSYS Forte\t-forte\nANSYS Chemkin\t-chemkinpro\nANSYS Energico\t-energico\nANSYS FENSAP-ICE\t-fensapice\nANSYS Reaction Workbench\t-reactionwb\nANSYS Model Fuel Library (Encrypted)\t-mfl\n# Note Installing any of the above products will install ANSYS Workbench\nANSYS Remote Solve Manager Standalone Services\t-rsm\nParasolid Geometry Interface\t-parasolid\nACIS Geometry Interface\t-acis\nNX Geometry Interface Plugin\t-ug_plugin\nANSYS Icepak\t-icepak\nCATIA 5 Reader\t-catia5_reader" )
 
-		bSizer271.Add( self.m_textCtrl10, 3, wx.ALL, 5 )
+		bSizer271.Add( self.wb_flags_text, 3, wx.ALL, 5 )
 
 
 		bSizer271.Add( ( 0, 0), 1, wx.EXPAND, 5 )
@@ -305,8 +305,8 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 		self.sa_check = wx.CheckBox( self.m_panel2, wx.ID_ANY, u"Sa", wx.DefaultPosition, wx.DefaultSize, 0 )
 		bSizer50.Add( self.sa_check, 0, wx.ALL, 5 )
 
-		self.so_check = wx.CheckBox( self.m_panel2, wx.ID_ANY, u"Su", wx.DefaultPosition, wx.DefaultSize, 0 )
-		bSizer50.Add( self.so_check, 0, wx.ALL, 5 )
+		self.su_check = wx.CheckBox( self.m_panel2, wx.ID_ANY, u"Su", wx.DefaultPosition, wx.DefaultSize, 0 )
+		bSizer50.Add( self.su_check, 0, wx.ALL, 5 )
 
 
 		bSizer56.Add( bSizer50, 0, wx.EXPAND, 5 )
@@ -318,8 +318,8 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 
 		bSizer51.Add( self.m_staticText19, 0, wx.ALL, 5 )
 
-		self.m_timePicker1 = wx.adv.TimePickerCtrl( self.m_panel2, wx.ID_ANY, wx.DefaultDateTime, wx.DefaultPosition, wx.DefaultSize, wx.adv.TP_DEFAULT )
-		bSizer51.Add( self.m_timePicker1, 0, wx.ALL, 5 )
+		self.time_picker = wx.adv.TimePickerCtrl( self.m_panel2, wx.ID_ANY, wx.DefaultDateTime, wx.DefaultPosition, wx.DefaultSize, wx.adv.TP_DEFAULT )
+		bSizer51.Add( self.time_picker, 0, wx.ALL, 5 )
 
 
 		bSizer56.Add( bSizer51, 0, wx.EXPAND, 5 )
@@ -362,8 +362,8 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 
 		bSizer62.Add( ( 0, 0), 5, wx.EXPAND, 5 )
 
-		self.m_button25 = wx.Button( self.m_panel2, wx.ID_ANY, u"Save settings as Default", wx.DefaultPosition, wx.DefaultSize, 0 )
-		bSizer62.Add( self.m_button25, 4, wx.ALL, 5 )
+		self.save_default_button = wx.Button( self.m_panel2, wx.ID_ANY, u"Save settings as Default", wx.DefaultPosition, wx.DefaultSize, 0 )
+		bSizer62.Add( self.save_default_button, 4, wx.ALL, 5 )
 
 
 		bSizer62.Add( ( 0, 0), 1, wx.EXPAND, 5 )
@@ -394,6 +394,7 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 		self.delete_zip_check.Bind( wx.EVT_CHECKBOX, self.delete_zip_check_click )
 		self.set_download_path_but.Bind( wx.EVT_BUTTON, self.set_download_path )
 		self.install_once_button.Bind( wx.EVT_BUTTON, self.install_edt_click )
+		self.save_default_button.Bind( wx.EVT_BUTTON, self.save_default_click )
 
 	def __del__( self ):
 		pass
@@ -416,6 +417,9 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 		event.Skip()
 
 	def install_edt_click( self, event ):
+		event.Skip()
+
+	def save_default_click( self, event ):
 		event.Skip()
 
 

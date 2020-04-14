@@ -1,18 +1,19 @@
+import json
 import logging
 import os
-import requests
-import json
-from datetime import datetime
-import set_log
-import shutil
+import pathlib
+import re
 import subprocess
 import threading
 import time
-import wx
-import re
-from collections import OrderedDict
-import pathlib
 import xml.etree.ElementTree as ET
+from collections import OrderedDict
+from datetime import datetime
+
+import requests
+import wx
+
+import set_log
 from downloader_ui_src import Ansys_Beta_Downloader_UI
 
 artifactory_dict = OrderedDict([
@@ -269,7 +270,10 @@ class MyWindow(Ansys_Beta_Downloader_UI):
 
     def get_artifacts_info(self, _unused_event=None):
         """
-            Populate arifact_dict with versions and available dates for these versions
+            Function is fired on start of the UI or when Artifactory value is changed in drop down menu.
+            Populate arifact_dict with versions of WB and EDT available on selected artifactory.
+            Updates UI with these versions.
+            :return None in case if we catch any HTTP error eg 401
         """
         self._init_combobox([], self.version_dropmenu)
 
@@ -334,6 +338,11 @@ class MyWindow(Ansys_Beta_Downloader_UI):
                                                   schedule_time])
 
     def install_edt_click(self, _unused_event=None):
+        """
+        Invoked when user clicks Install once button
+        :param _unused_event: default arg
+        :return: None
+        """
         self.get_artifacts_info()
 
     @staticmethod
@@ -374,7 +383,7 @@ class MyWindow(Ansys_Beta_Downloader_UI):
     @staticmethod
     def _get_previous_edt_path():
         """
-        Function which returns path of EDT installation based on environment variable
+        :return path of EDT installation based on environment variable or empty string if no env var found
         """
         all_vars = os.environ
         env_var = ""
@@ -390,7 +399,11 @@ class MyWindow(Ansys_Beta_Downloader_UI):
 
     @staticmethod
     def _path_dialogue(which_dir):
-        """Creates a dialogue where user can select directory"""
+        """
+        Creates a dialogue where user can select directory
+        :param which_dir: name of the required path (Install or Download)
+        :return: (str/bool) path to the file or False if user closed the dialogue
+        """
         get_dir_dialogue = wx.DirDialog(None, "Choose {} directory:".format(which_dir), style=wx.DD_DEFAULT_STYLE)
         if get_dir_dialogue.ShowModal() == wx.ID_OK:
             path = get_dir_dialogue.GetPath()
@@ -454,45 +467,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-# username = "mbeliaev"
-# password = "AP4j2Kid4WoTzXdzHEs2AkMya6b"
-# server = "http://milvmartifact.win.ansys.com:8080"
-# repo = "v202_EBU_Certified-cache"
-# with requests.get(server + "/artifactory/api/storage/" + repo + "?list&deep=0&listFolders=1", auth=(username, password),
-#                   timeout=30) as url_request:
-#     folder_dict_list = json.loads(url_request.text)['files']
-#
-# builds_dates = []
-# for folder_dict in folder_dict_list:
-#     folder_name = folder_dict['uri'][1:]
-#     try:
-#         builds_dates.append(int(folder_name))
-#     except ValueError:
-#         pass
-#
-# latest_build = max(builds_dates)
-#
-# url = server + r"/artifactory/" + repo + r"/" + str(latest_build) + r"/Electronics_202_winx64.zip"
-# # url = server + r"/artifactory/v201_Licensing_Certified-cache/winx64/setup.exe"
-#
-# save_to = r"D:\C_replacement\Downloads\temp_build.zip"
-#
-#
-# # save_to = r"D:\C_replacement\Downloads\setup.exe"
-#
-# # r = requests.get(url, auth=(username, password), timeout=30, , stream=True)
-#
-# # with open(save_to, 'wb') as zip_file:
-# # for chunk in r.iter_content(chunk_size=8192):
-# # if chunk:
-# # zip_file.write(chunk)
-#
-#
-# def download_file(url, save_to):
-#     with requests.get(url, auth=(username, password), timeout=30, stream=True) as url_request:
-#         with open(save_to, 'wb') as f:
-#             shutil.copyfileobj(url_request.raw, f)
-#
-#
-# download_file(url, save_to)

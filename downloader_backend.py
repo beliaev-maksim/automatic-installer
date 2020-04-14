@@ -1,17 +1,26 @@
-import json
 import argparse
+import json
 import logging
 import os
 import shutil
 from collections import namedtuple
-from downloader import artifactory_dict
 
 import requests
 
 import set_log
+from downloader import artifactory_dict
 
 
 def main():
+    """
+    Main function that operates the download process:
+    1. enables logs
+    2. parses argeuments to get settings file
+    3. loads JSON to named tuple
+    4. gets URL for selected version based on server
+    5. downloads zip archive with BETA build
+    :return: None
+    """
     set_log.set_logger()
 
     settings_path = parse_args()
@@ -27,6 +36,11 @@ def main():
 
 
 def get_build_link(settings):
+    """
+    Function that sends HTTP request to JFrog and get the list of folders with builds for EDT and checks user password
+    :param (namedtuple) settings: data parsed from settings file
+    :return: (str) url: URL link to the latest build that will be used to download .zip archive
+    """
     if not settings.username or not settings.password:
         logging.error("Please provide username and artifactory password")
         return False
@@ -88,11 +102,19 @@ def get_build_link(settings):
     return url
 
 
-def download_file(settings, url):
+def download_file(settings, url, recursion=False):
+    """
+    Downloads file in chunks and saves to the temp.zip file
+    :param (namedtuple) settings: settings from settings file
+    :param (str) url: to the zip archive or special JFrog API to download WB folder
+    :param (bool) recursion: Some artifactories do not have cached folders with WB  and we need recursively run
+    the same function but with new_url, however to prevent infinity loop we need this arg
+    :return: None
+    """
     with requests.get(url, auth=(settings.username, settings.password), timeout=30, stream=True) as url_request:
-        if url_request.status_code == 404:
+        if url_request.status_code == 404 and not recursion:
             # in HQ cached build does not exist and will return 404. Recursively start download with new url
-            download_file(settings, url.replace("-cache", ""))
+            download_file(settings, url.replace("-cache", ""), True)
             return
 
         destination_file = os.path.join(settings.download_path, f"temp_build_{settings.version}.zip")

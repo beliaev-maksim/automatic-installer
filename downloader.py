@@ -1,7 +1,9 @@
+import logging
 import os
 import requests
 import json
 from datetime import datetime
+import set_log
 import shutil
 import subprocess
 import threading
@@ -87,6 +89,8 @@ class FlashStatusBarThread(threading.Thread):
 class MyWindow(Ansys_Beta_Downloader_UI):
     def __init__(self, parent):
         Ansys_Beta_Downloader_UI.__init__(self, parent)
+
+        set_log.set_logger()
 
         self.username_text.Value = os.environ["USERNAME"]
         self.download_path_textbox.Value = os.environ["TEMP"]
@@ -205,6 +209,12 @@ class MyWindow(Ansys_Beta_Downloader_UI):
         self.bar_level = level
         self.bar_color = wx.WHITE
 
+        if msg:
+            if level == "i":
+                logging.info(msg)
+            elif level == "!":
+                logging.error(msg)
+
         # start a thread to update status bar
         self.worker = FlashStatusBarThread(self)
         self.worker.start()
@@ -281,8 +291,8 @@ class MyWindow(Ansys_Beta_Downloader_UI):
             return
 
         # catch 401 for bad credentials or similar
-        if "errors" in artifacts_list:
-            if artifacts_list["errors"][0]["status"] == 401:
+        if url_request.status_code != 200:
+            if url_request.status_code == 401:
                 self.add_status_msg("Bad credentials, please verify your username and password for {}".format(
                     self.artifactory_dropmenu.Value), "!")
             else:
@@ -290,32 +300,20 @@ class MyWindow(Ansys_Beta_Downloader_UI):
             return
 
         # fill the dictionary with EBU and WB keys since builds could be different
+        self.artifacts_dict = {}
         for artifact in artifacts_list:
             repo = artifact["key"]
             if "EBU_Certified" in repo:
                 version = repo.split("_")[0] + "_EBU"
                 if version not in self.artifacts_dict:
-                    self.artifacts_dict[version] = [repo, []]
-            elif "Certified" in repo:
+                    self.artifacts_dict[version] = repo
+            elif "Certified" in repo and "Licensing" not in repo:
                 version = repo.split("_")[0] + "_WB"
                 if version not in self.artifacts_dict:
-                    self.artifacts_dict[version] = [repo, []]
-
-        for version in self.artifacts_dict:
-            repo = self.artifacts_dict[version][0]
-            url = server + "/api/storage/" + repo + "?list&deep=0&listFolders=1"
-            with requests.get(url, auth=(username, password), timeout=30) as url_request:
-                folder_dict_list = json.loads(url_request.text)['files']
-
-            builds_dates = self.artifacts_dict[version][1]
-            for folder_dict in folder_dict_list:
-                folder_name = folder_dict['uri'][1:]
-                try:
-                    builds_dates.append(int(folder_name))
-                except ValueError:
-                    pass
+                    self.artifacts_dict[version] = repo
 
         self._init_combobox(self.artifacts_dict.keys(), self.version_dropmenu, sorted(self.artifacts_dict.keys())[-1])
+        print(self.artifacts_dict)
 
     def get_active_schtasks(self):
         """

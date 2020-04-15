@@ -1968,7 +1968,7 @@
                                                                     <property name="window_extra_style"></property>
                                                                     <property name="window_name"></property>
                                                                     <property name="window_style"></property>
-                                                                    <event name="OnButtonClick">install_edt_click</event>
+                                                                    <event name="OnButtonClick">install_once_click</event>
                                                                 </object>
                                                             </object>
                                                             <object class="sizeritem" expanded="0">
@@ -2870,6 +2870,7 @@
                                                             <property name="window_extra_style"></property>
                                                             <property name="window_name"></property>
                                                             <property name="window_style"></property>
+                                                            <event name="OnButtonClick">schedule_button_click</event>
                                                         </object>
                                                     </object>
                                                     <object class="sizeritem" expanded="0">

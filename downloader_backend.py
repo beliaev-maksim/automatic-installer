@@ -33,6 +33,8 @@ def main():
     url = get_build_link(settings)
     if url:
         download_file(settings, url)
+    else:
+        logging.error("Cannot receive URL")
 
 
 def get_build_link(settings):
@@ -56,8 +58,8 @@ def get_build_link(settings):
         return False
 
     # catch 401 for bad credentials or similar
-    if "errors" in artifacts_list:
-        if artifacts_list["errors"][0]["status"] == 401:
+    if url_request.status_code != 200:
+        if url_request.status_code == 401:
             logging.error("Bad credentials, please verify your username and password for {}".format(
                 settings.artifactory))
         else:
@@ -70,7 +72,7 @@ def get_build_link(settings):
     for artifact in artifacts_list:
         repo = artifact["key"]
         if "EBU_Certified" in repo:
-            version = repo.split("_")[0] + "_EBU"
+            version = repo.split("_")[0] + "_EDT"
             if version not in artifacts_dict:
                 artifacts_dict[version] = repo
         elif "Certified" in repo and "Licensing" not in repo:
@@ -79,6 +81,7 @@ def get_build_link(settings):
                 artifacts_dict[version] = repo
 
     repo = artifacts_dict[settings.version]
+
     if "EDT" in settings.version:
         url = server + "/api/storage/" + repo + "?list&deep=0&listFolders=1"
         with requests.get(url, auth=(settings.username, settings.password), timeout=30) as url_request:
@@ -92,7 +95,7 @@ def get_build_link(settings):
             except ValueError:
                 pass
 
-        latest_build = max(artifacts_dict[settings.version])
+        latest_build = max(builds_dates)
 
         url = f"{server}/{repo}/{latest_build}/Electronics_{settings.version.split('_')[0][1:]}_winx64.zip"
     elif "WB" in settings.version:

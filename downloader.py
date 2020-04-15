@@ -130,6 +130,13 @@ class MyWindow(Ansys_Beta_Downloader_UI):
         # bind custom event to invoke function on_signal
         self.Bind(SIGNAL_EVT_BAR, self.set_status_bar)
 
+    def post_init(self):
+        """
+        Function invoked right after __init__ to get settings and retrieve server data.
+        This is required to show the user in statusbar that we are grabbing some data from server
+        and not simply hanging
+        :return:
+        """
         if not self.read_settings():
             # file with defaults does not exist
             self.time_picker.Value = datetime.strptime("23:00:00", '%H:%M:%S')
@@ -151,7 +158,7 @@ class MyWindow(Ansys_Beta_Downloader_UI):
         """
         Function to save current configuration of settings to the file
         :param settings_file: file name to write settings
-        :return: None
+        :return: settings_path: path to the settings file
         """
         setting_dict = {
             "install_path": self.install_path_textbox.Value,
@@ -169,6 +176,8 @@ class MyWindow(Ansys_Beta_Downloader_UI):
         settings_path = os.path.join(self.settings_folder, settings_file + ".json")
         with open(settings_path, "w") as file:
             json.dump(setting_dict, file, indent=4)
+
+        return settings_path
 
     def read_settings(self, settings_file="default_settings"):
         """
@@ -285,6 +294,8 @@ class MyWindow(Ansys_Beta_Downloader_UI):
             self.add_status_msg("Please provide username and artifactory password", "!")
             return
 
+        self.status_bar.SetStatusText("Connecting to server...")
+
         try:
             with requests.get(server + "/api/repositories", auth=(username, password),
                               timeout=30) as url_request:
@@ -293,6 +304,7 @@ class MyWindow(Ansys_Beta_Downloader_UI):
             self.add_status_msg("Timeout on connection, please verify your username and password for {}".format(
                 self.artifactory_dropmenu.Value), "!")
             return
+        self.status_bar.SetStatusText("")
 
         # catch 401 for bad credentials or similar
         if url_request.status_code != 200:
@@ -308,7 +320,7 @@ class MyWindow(Ansys_Beta_Downloader_UI):
         for artifact in artifacts_list:
             repo = artifact["key"]
             if "EBU_Certified" in repo:
-                version = repo.split("_")[0] + "_EBU"
+                version = repo.split("_")[0] + "_EDT"
                 if version not in self.artifacts_dict:
                     self.artifacts_dict[version] = repo
             elif "Certified" in repo and "Licensing" not in repo:
@@ -337,13 +349,21 @@ class MyWindow(Ansys_Beta_Downloader_UI):
                                                   task_data_dict["version"],
                                                   schedule_time])
 
-    def install_edt_click(self, _unused_event=None):
+    def install_once_click(self, _unused_event=None):
         """
         Invoked when user clicks Install once button
         :param _unused_event: default arg
         :return: None
         """
-        self.get_artifacts_info()
+        settings_file = self.save_settings("one_time_install_" + self.version_dropmenu.Value)
+        threading.Thread(target=self.submit_batch_thread, daemon=True, args=(settings_file,)).start()
+        self.add_status_msg("Download and installation was successfully started", "i")
+
+    @staticmethod
+    def submit_batch_thread(settings_file):
+        command = f'python.exe downloader_backend.py -p {settings_file}'.split()
+        print(command)
+        subprocess.call(command)
 
     @staticmethod
     def get_task_details(task):
@@ -462,6 +482,7 @@ def main():
     app = wx.App()
     ex = MyWindow(None)
     ex.Show()
+    ex.post_init()
     app.MainLoop()
 
 

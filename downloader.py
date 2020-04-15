@@ -87,6 +87,7 @@ class FlashStatusBarThread(threading.Thread):
 # todo check if WB exists make automatic integration with EDT
 # todo add windows notification when build is updated (maybe if password is wrong but need to check that it persists)
 # todo https://wxpython.org/Phoenix/docs/html/wx.adv.NotificationMessage.html
+# todo check if versions in settings exists on server then add set it as value, else throw an error
 class MyWindow(Ansys_Beta_Downloader_UI):
     def __init__(self, parent):
         Ansys_Beta_Downloader_UI.__init__(self, parent)
@@ -328,8 +329,9 @@ class MyWindow(Ansys_Beta_Downloader_UI):
                 if version not in self.artifacts_dict:
                     self.artifacts_dict[version] = repo
 
-        self._init_combobox(self.artifacts_dict.keys(), self.version_dropmenu, sorted(self.artifacts_dict.keys())[-1])
-        print(self.artifacts_dict)
+        versions = list(self.artifacts_dict.keys())
+        versions.sort(key=lambda x: x[1:6])
+        self._init_combobox(versions, self.version_dropmenu, sorted(self.artifacts_dict.keys())[-1])
 
     def get_active_schtasks(self):
         """
@@ -362,7 +364,6 @@ class MyWindow(Ansys_Beta_Downloader_UI):
     @staticmethod
     def submit_batch_thread(settings_file):
         command = f'python.exe downloader_backend.py -p {settings_file}'.split()
-        print(command)
         subprocess.call(command)
 
     @staticmethod

@@ -2,7 +2,9 @@ import argparse
 import json
 import logging
 import os
+import re
 import shutil
+import zipfile
 from collections import namedtuple
 
 import requests
@@ -15,7 +17,7 @@ def main():
     """
     Main function that operates the download process:
     1. enables logs
-    2. parses argeuments to get settings file
+    2. parses arguments to get settings file
     3. loads JSON to named tuple
     4. gets URL for selected version based on server
     5. downloads zip archive with BETA build
@@ -32,9 +34,12 @@ def main():
 
     url = get_build_link(settings)
     if url:
-        download_file(settings, url)
+        zip_file = download_file(settings, url)
     else:
         logging.error("Cannot receive URL")
+
+    if zip_file:
+        install(zip_file)
 
 
 def get_build_link(settings):
@@ -112,18 +117,62 @@ def download_file(settings, url, recursion=False):
     :param (str) url: to the zip archive or special JFrog API to download WB folder
     :param (bool) recursion: Some artifactories do not have cached folders with WB  and we need recursively run
     the same function but with new_url, however to prevent infinity loop we need this arg
-    :return: None
+    :return: (str) destination_file: link to the zip file
     """
     with requests.get(url, auth=(settings.username, settings.password), timeout=30, stream=True) as url_request:
         if url_request.status_code == 404 and not recursion:
             # in HQ cached build does not exist and will return 404. Recursively start download with new url
             download_file(settings, url.replace("-cache", ""), True)
-            return
+            return False
 
         destination_file = os.path.join(settings.download_path, f"temp_build_{settings.version}.zip")
         logging.info(f"Start download file from {url} to {destination_file}")
         with open(destination_file, 'wb') as f:
             shutil.copyfileobj(url_request.raw, f)
+
+        logging.info(f"File is downloaded to: {destination_file}")
+        return destination_file
+
+
+def install(zip_file):
+    # todo check that the same version is already installed or not before deletion
+    target_dir = zip_file.replace(".zip", "")
+    with zipfile.ZipFile(zip_file, "r") as zip_ref:
+        zip_ref.extractall(target_dir)
+
+    logging.info(f"File is unpacked to {target_dir}")
+
+    product_id = parse_iss(target_dir)
+    if product_id:
+        logging.info(f"Product ID is {product_id}")
+    else:
+        logging.error("Unable to extract product ID")
+        return
+
+
+def uninstall(settings):
+    pass
+
+
+def parse_iss(dir_name):
+    default_iss_file = ""
+    for dir_path, dir_names, file_names in os.walk(dir_name):
+        for filename in file_names:
+            if "AnsysEM" in dir_path and filename.endswith(".iss"):
+                default_iss_file = os.path.join(dir_path, filename)
+                break
+
+    if not default_iss_file:
+        return False
+
+    try:
+        with open(default_iss_file, "r") as iss_file:
+            for line in iss_file:
+                if "DlgOrder" in line:
+                    product_id = re.findall("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", line)[0]
+                    return product_id
+    except IndexError:
+        return False
 
 
 def parse_args():

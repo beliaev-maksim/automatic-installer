@@ -19,13 +19,16 @@ import wx.dataview
 class Ansys_Beta_Downloader_UI ( wx.Frame ):
 
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size( 700,622 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size( 721,643 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
 
 		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 
 		bSizer1 = wx.BoxSizer( wx.HORIZONTAL )
 
-		self.m_panel2 = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		self.m_notebook1 = wx.Notebook( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_notebook1.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_APPWORKSPACE ) )
+
+		self.m_panel2 = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.m_panel2.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_APPWORKSPACE ) )
 
 		bSizer32 = wx.BoxSizer( wx.HORIZONTAL )
@@ -197,27 +200,6 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 
 		bSizer2.Add( bSizer42, 1, wx.EXPAND, 5 )
 
-		self.m_staticline8 = wx.StaticLine( self.m_panel2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
-		bSizer2.Add( self.m_staticline8, 0, wx.EXPAND |wx.ALL, 5 )
-
-		bSizer271 = wx.BoxSizer( wx.VERTICAL )
-
-		self.m_staticText18 = wx.StaticText( self.m_panel2, wx.ID_ANY, u"WB Silent Installation Flags", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_staticText18.Wrap( -1 )
-
-		bSizer271.Add( self.m_staticText18, 0, wx.ALL, 5 )
-
-		self.wb_flags_text = wx.TextCtrl( self.m_panel2, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 300,-1 ), 0 )
-		self.wb_flags_text.SetToolTip( u"Product\tProduct Flag\nMechanical APDL\t-mechapdl\nANSYS Customization Files\t-ansyscust\nANSYS Autodyn\t-autodyn\nANSYS LS-DYNA\t-lsdyna\nANSYS CFD-Post\t-cfdpost\nANSYS CFX\t-cfx\nANSYS EnSight\t-ensight\nANSYS TurboGrid\t-turbogrid\nANSYS Fluent\t-fluent\nANSYS Polyflow\t-polyflow\nANSYS ICEM CFD\t-icemcfd\nANSYS Forte\t-forte\nANSYS Chemkin\t-chemkinpro\nANSYS Energico\t-energico\nANSYS FENSAP-ICE\t-fensapice\nANSYS Reaction Workbench\t-reactionwb\nANSYS Model Fuel Library (Encrypted)\t-mfl\n# Note Installing any of the above products will install ANSYS Workbench\nANSYS Remote Solve Manager Standalone Services\t-rsm\nParasolid Geometry Interface\t-parasolid\nACIS Geometry Interface\t-acis\nNX Geometry Interface Plugin\t-ug_plugin\nANSYS Icepak\t-icepak\nCATIA 5 Reader\t-catia5_reader" )
-
-		bSizer271.Add( self.wb_flags_text, 3, wx.ALL, 5 )
-
-
-		bSizer271.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-
-		bSizer2.Add( bSizer271, 1, wx.EXPAND, 5 )
-
 		bSizer57 = wx.BoxSizer( wx.VERTICAL )
 
 		self.m_staticline13 = wx.StaticLine( self.m_panel2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
@@ -378,7 +360,58 @@ class Ansys_Beta_Downloader_UI ( wx.Frame ):
 		self.m_panel2.SetSizer( bSizer32 )
 		self.m_panel2.Layout()
 		bSizer32.Fit( self.m_panel2 )
-		bSizer1.Add( self.m_panel2, 1, wx.EXPAND |wx.ALL, 5 )
+		self.m_notebook1.AddPage( self.m_panel2, u"Main", True )
+		self.m_panel4 = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		self.m_panel4.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_APPWORKSPACE ) )
+
+		bSizer262 = wx.BoxSizer( wx.HORIZONTAL )
+
+		bSizer272 = wx.BoxSizer( wx.VERTICAL )
+
+		self.m_checkBox9 = wx.CheckBox( self.m_panel4, wx.ID_ANY, u"Force Install the same build date", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_checkBox9.SetToolTip( u"If checked will force installation of the same build date. Nor recommended to check. For example you have installed build of 20th of May and try to download and install next day, application will identify that new build was not added to artifactory and will skip the installation" )
+
+		bSizer272.Add( self.m_checkBox9, 0, wx.ALL, 5 )
+
+		self.m_staticline8 = wx.StaticLine( self.m_panel4, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
+		bSizer272.Add( self.m_staticline8, 0, wx.EXPAND |wx.ALL, 5 )
+
+		bSizer271 = wx.BoxSizer( wx.VERTICAL )
+
+		self.m_staticText18 = wx.StaticText( self.m_panel4, wx.ID_ANY, u"WB Silent Installation Flags", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText18.Wrap( -1 )
+
+		bSizer271.Add( self.m_staticText18, 0, wx.ALL, 5 )
+
+		self.wb_flags_text = wx.TextCtrl( self.m_panel4, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 300,-1 ), 0 )
+		self.wb_flags_text.SetToolTip( u"Product\tProduct Flag\nMechanical APDL\t-mechapdl\nANSYS Customization Files\t-ansyscust\nANSYS Autodyn\t-autodyn\nANSYS LS-DYNA\t-lsdyna\nANSYS CFD-Post\t-cfdpost\nANSYS CFX\t-cfx\nANSYS EnSight\t-ensight\nANSYS TurboGrid\t-turbogrid\nANSYS Fluent\t-fluent\nANSYS Polyflow\t-polyflow\nANSYS ICEM CFD\t-icemcfd\nANSYS Forte\t-forte\nANSYS Chemkin\t-chemkinpro\nANSYS Energico\t-energico\nANSYS FENSAP-ICE\t-fensapice\nANSYS Reaction Workbench\t-reactionwb\nANSYS Model Fuel Library (Encrypted)\t-mfl\n# Note Installing any of the above products will install ANSYS Workbench\nANSYS Remote Solve Manager Standalone Services\t-rsm\nParasolid Geometry Interface\t-parasolid\nACIS Geometry Interface\t-acis\nNX Geometry Interface Plugin\t-ug_plugin\nANSYS Icepak\t-icepak\nCATIA 5 Reader\t-catia5_reader" )
+
+		bSizer271.Add( self.wb_flags_text, 3, wx.ALL, 5 )
+
+
+		bSizer271.Add( ( 0, 0), 1, wx.EXPAND, 5 )
+
+
+		bSizer272.Add( bSizer271, 1, wx.EXPAND, 5 )
+
+
+		bSizer262.Add( bSizer272, 1, wx.EXPAND, 5 )
+
+		bSizer29 = wx.BoxSizer( wx.VERTICAL )
+
+		self.m_textCtrl6 = wx.TextCtrl( self.m_panel4, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
+		bSizer29.Add( self.m_textCtrl6, 0, wx.ALL, 5 )
+
+
+		bSizer262.Add( bSizer29, 1, wx.EXPAND, 5 )
+
+
+		self.m_panel4.SetSizer( bSizer262 )
+		self.m_panel4.Layout()
+		bSizer262.Fit( self.m_panel4 )
+		self.m_notebook1.AddPage( self.m_panel4, u"Advanced Settings", False )
+
+		bSizer1.Add( self.m_notebook1, 1, wx.EXPAND |wx.ALL, 5 )
 
 
 		self.SetSizer( bSizer1 )

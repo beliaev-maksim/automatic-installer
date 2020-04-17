@@ -13,33 +13,34 @@ import set_log
 from downloader import artifactory_dict
 
 
-def main():
+class Downloader:
     """
-    Main function that operates the download process:
-    1. enables logs
-    2. parses arguments to get settings file
-    3. loads JSON to named tuple
-    4. gets URL for selected version based on server
-    5. downloads zip archive with BETA build
-    :return: None
-    """
-    set_log.set_logger()
+        Main class that operates the download process:
+        1. enables logs
+        2. parses arguments to get settings file
+        3. loads JSON to named tuple
+        4. gets URL for selected version based on server
+        5. downloads zip archive with BETA build
+        """
+    def __init__(self):
+        set_log.set_logger()
 
-    settings_path = parse_args()
-    if not settings_path:
-        return
+        settings_path = parse_args()
+        if not settings_path:
+            return
 
-    with open(settings_path, "r") as file:
-        settings = json.load(file, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()))
+        with open(settings_path, "r") as file:
+            self.settings = json.load(file, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()))
 
-    url = get_build_link(settings)
-    if url:
-        zip_file = download_file(settings, url)
-    else:
-        logging.error("Cannot receive URL")
 
-    if zip_file:
-        install(zip_file)
+        url = get_build_link(self.settings)
+        if url:
+            zip_file = download_file(self.settings, url)
+        else:
+            logging.error("Cannot receive URL")
+
+        if zip_file:
+            install(zip_file)
 
 
 def get_build_link(settings):

@@ -1,16 +1,19 @@
-import os
-import requests
 import json
-from datetime import datetime
-import shutil
+import logging
+import os
+import pathlib
+import re
 import subprocess
 import threading
 import time
-import wx
-import re
-from collections import OrderedDict
-import pathlib
 import xml.etree.ElementTree as ET
+from collections import OrderedDict
+from datetime import datetime
+
+import requests
+import wx
+
+import set_log
 from downloader_ui_src import Ansys_Beta_Downloader_UI
 
 artifactory_dict = OrderedDict([
@@ -84,9 +87,14 @@ class FlashStatusBarThread(threading.Thread):
 # todo check if WB exists make automatic integration with EDT
 # todo add windows notification when build is updated (maybe if password is wrong but need to check that it persists)
 # todo https://wxpython.org/Phoenix/docs/html/wx.adv.NotificationMessage.html
-class MyWindow(Ansys_Beta_Downloader_UI):
+# todo check if versions in settings exists on server then add set it as value, else throw an error
+# todo check that the same version (build date) is not yet installed
+# todo add killbit9 argument to run executables for the first time
+class MainWindow(Ansys_Beta_Downloader_UI):
     def __init__(self, parent):
         Ansys_Beta_Downloader_UI.__init__(self, parent)
+
+        set_log.set_logger()
 
         self.username_text.Value = os.environ["USERNAME"]
         self.download_path_textbox.Value = os.environ["TEMP"]
@@ -125,6 +133,13 @@ class MyWindow(Ansys_Beta_Downloader_UI):
         # bind custom event to invoke function on_signal
         self.Bind(SIGNAL_EVT_BAR, self.set_status_bar)
 
+    def post_init(self):
+        """
+        Function invoked right after __init__ to get settings and retrieve server data.
+        This is required to show the user in statusbar that we are grabbing some data from server
+        and not simply hanging
+        :return:
+        """
         if not self.read_settings():
             # file with defaults does not exist
             self.time_picker.Value = datetime.strptime("23:00:00", '%H:%M:%S')
@@ -146,7 +161,7 @@ class MyWindow(Ansys_Beta_Downloader_UI):
         """
         Function to save current configuration of settings to the file
         :param settings_file: file name to write settings
-        :return: None
+        :return: settings_path: path to the settings file
         """
         setting_dict = {
             "install_path": self.install_path_textbox.Value,
@@ -164,6 +179,8 @@ class MyWindow(Ansys_Beta_Downloader_UI):
         settings_path = os.path.join(self.settings_folder, settings_file + ".json")
         with open(settings_path, "w") as file:
             json.dump(setting_dict, file, indent=4)
+
+        return settings_path
 
     def read_settings(self, settings_file="default_settings"):
         """
@@ -204,6 +221,12 @@ class MyWindow(Ansys_Beta_Downloader_UI):
         self.bar_text = msg
         self.bar_level = level
         self.bar_color = wx.WHITE
+
+        if msg:
+            if level == "i":
+                logging.info(msg)
+            elif level == "!":
+                logging.error(msg)
 
         # start a thread to update status bar
         self.worker = FlashStatusBarThread(self)
@@ -259,7 +282,10 @@ class MyWindow(Ansys_Beta_Downloader_UI):
 
     def get_artifacts_info(self, _unused_event=None):
         """
-            Populate arifact_dict with versions and available dates for these versions
+            Function is fired on start of the UI or when Artifactory value is changed in drop down menu.
+            Populate arifact_dict with versions of WB and EDT available on selected artifactory.
+            Updates UI with these versions.
+            :return None in case if we catch any HTTP error eg 401
         """
         self._init_combobox([], self.version_dropmenu)
 
@@ -271,6 +297,8 @@ class MyWindow(Ansys_Beta_Downloader_UI):
             self.add_status_msg("Please provide username and artifactory password", "!")
             return
 
+        self.status_bar.SetStatusText("Connecting to server...")
+
         try:
             with requests.get(server + "/api/repositories", auth=(username, password),
                               timeout=30) as url_request:
@@ -279,10 +307,16 @@ class MyWindow(Ansys_Beta_Downloader_UI):
             self.add_status_msg("Timeout on connection, please verify your username and password for {}".format(
                 self.artifactory_dropmenu.Value), "!")
             return
+        except requests.exceptions.ConnectionError:
+            self.add_status_msg("Connection error, please verify that you are on VPN".format(
+                self.artifactory_dropmenu.Value), "!")
+            return
+
+        self.status_bar.SetStatusText("")
 
         # catch 401 for bad credentials or similar
-        if "errors" in artifacts_list:
-            if artifacts_list["errors"][0]["status"] == 401:
+        if url_request.status_code != 200:
+            if url_request.status_code == 401:
                 self.add_status_msg("Bad credentials, please verify your username and password for {}".format(
                     self.artifactory_dropmenu.Value), "!")
             else:
@@ -290,32 +324,21 @@ class MyWindow(Ansys_Beta_Downloader_UI):
             return
 
         # fill the dictionary with EBU and WB keys since builds could be different
+        self.artifacts_dict = {}
         for artifact in artifacts_list:
             repo = artifact["key"]
             if "EBU_Certified" in repo:
-                version = repo.split("_")[0] + "_EBU"
+                version = repo.split("_")[0] + "_EDT"
                 if version not in self.artifacts_dict:
-                    self.artifacts_dict[version] = [repo, []]
-            elif "Certified" in repo:
+                    self.artifacts_dict[version] = repo
+            elif "Certified" in repo and "Licensing" not in repo:
                 version = repo.split("_")[0] + "_WB"
                 if version not in self.artifacts_dict:
-                    self.artifacts_dict[version] = [repo, []]
+                    self.artifacts_dict[version] = repo
 
-        for version in self.artifacts_dict:
-            repo = self.artifacts_dict[version][0]
-            url = server + "/api/storage/" + repo + "?list&deep=0&listFolders=1"
-            with requests.get(url, auth=(username, password), timeout=30) as url_request:
-                folder_dict_list = json.loads(url_request.text)['files']
-
-            builds_dates = self.artifacts_dict[version][1]
-            for folder_dict in folder_dict_list:
-                folder_name = folder_dict['uri'][1:]
-                try:
-                    builds_dates.append(int(folder_name))
-                except ValueError:
-                    pass
-
-        self._init_combobox(self.artifacts_dict.keys(), self.version_dropmenu, sorted(self.artifacts_dict.keys())[-1])
+        versions = list(self.artifacts_dict.keys())
+        versions.sort(key=lambda x: x[1:6])
+        self._init_combobox(versions, self.version_dropmenu, sorted(self.artifacts_dict.keys())[-1])
 
     def get_active_schtasks(self):
         """
@@ -335,8 +358,20 @@ class MyWindow(Ansys_Beta_Downloader_UI):
                                                   task_data_dict["version"],
                                                   schedule_time])
 
-    def install_edt_click(self, _unused_event=None):
-        self.get_artifacts_info()
+    def install_once_click(self, _unused_event=None):
+        """
+        Invoked when user clicks Install once button
+        :param _unused_event: default arg
+        :return: None
+        """
+        settings_file = self.save_settings("one_time_install_" + self.version_dropmenu.Value)
+        threading.Thread(target=self.submit_batch_thread, daemon=True, args=(settings_file,)).start()
+        self.add_status_msg("Download and installation was successfully started", "i")
+
+    @staticmethod
+    def submit_batch_thread(settings_file):
+        command = f'python.exe downloader_backend.py -p {settings_file}'.split()
+        subprocess.call(command)
 
     @staticmethod
     def get_task_details(task):
@@ -376,7 +411,7 @@ class MyWindow(Ansys_Beta_Downloader_UI):
     @staticmethod
     def _get_previous_edt_path():
         """
-        Function which returns path of EDT installation based on environment variable
+        :return path of EDT installation based on environment variable or empty string if no env var found
         """
         all_vars = os.environ
         env_var = ""
@@ -392,7 +427,11 @@ class MyWindow(Ansys_Beta_Downloader_UI):
 
     @staticmethod
     def _path_dialogue(which_dir):
-        """Creates a dialogue where user can select directory"""
+        """
+        Creates a dialogue where user can select directory
+        :param which_dir: name of the required path (Install or Download)
+        :return: (str/bool) path to the file or False if user closed the dialogue
+        """
         get_dir_dialogue = wx.DirDialog(None, "Choose {} directory:".format(which_dir), style=wx.DD_DEFAULT_STYLE)
         if get_dir_dialogue.ShowModal() == wx.ID_OK:
             path = get_dir_dialogue.GetPath()
@@ -449,52 +488,11 @@ class MyWindow(Ansys_Beta_Downloader_UI):
 def main():
     """Main function to generate UI. Validate that only one instance is opened."""
     app = wx.App()
-    ex = MyWindow(None)
-    ex.Show()
+    ui = MainWindow(None)
+    ui.Show()
+    ui.post_init()
     app.MainLoop()
 
 
 if __name__ == '__main__':
     main()
-
-# username = "mbeliaev"
-# password = "AP4j2Kid4WoTzXdzHEs2AkMya6b"
-# server = "http://milvmartifact.win.ansys.com:8080"
-# repo = "v202_EBU_Certified-cache"
-# with requests.get(server + "/artifactory/api/storage/" + repo + "?list&deep=0&listFolders=1", auth=(username, password),
-#                   timeout=30) as url_request:
-#     folder_dict_list = json.loads(url_request.text)['files']
-#
-# builds_dates = []
-# for folder_dict in folder_dict_list:
-#     folder_name = folder_dict['uri'][1:]
-#     try:
-#         builds_dates.append(int(folder_name))
-#     except ValueError:
-#         pass
-#
-# latest_build = max(builds_dates)
-#
-# url = server + r"/artifactory/" + repo + r"/" + str(latest_build) + r"/Electronics_202_winx64.zip"
-# # url = server + r"/artifactory/v201_Licensing_Certified-cache/winx64/setup.exe"
-#
-# save_to = r"D:\C_replacement\Downloads\temp_build.zip"
-#
-#
-# # save_to = r"D:\C_replacement\Downloads\setup.exe"
-#
-# # r = requests.get(url, auth=(username, password), timeout=30, , stream=True)
-#
-# # with open(save_to, 'wb') as zip_file:
-# # for chunk in r.iter_content(chunk_size=8192):
-# # if chunk:
-# # zip_file.write(chunk)
-#
-#
-# def download_file(url, save_to):
-#     with requests.get(url, auth=(username, password), timeout=30, stream=True) as url_request:
-#         with open(save_to, 'wb') as f:
-#             shutil.copyfileobj(url_request.raw, f)
-#
-#
-# download_file(url, save_to)

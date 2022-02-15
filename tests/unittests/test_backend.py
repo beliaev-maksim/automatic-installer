@@ -7,8 +7,8 @@ from collections import namedtuple
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
-from zlib import error as zlib_err
 from zipfile import BadZipFile
+from zlib import error as zlib_err
 
 import psutil
 import responses
@@ -300,13 +300,28 @@ class SharepointWorkbenchTest(BaseSetup):
 
 
 def add_responses_for_repos(mocked_data, status=200):
-    arti_get_repos = mocked_data["arti_get_repos"]
-    responses.add(
-        responses.GET,
-        url="http://ottvmartifact.win.ansys.com:8080/artifactory/api/repositories",
-        status=status,
-        json=arti_get_repos,
-    )
+    if status == 200:
+        arti_get_repos = mocked_data["arti_get_repos"]
+        responses.add(
+            responses.GET,
+            url="http://ottvmartifact.win.ansys.com:8080/artifactory/api/repositories",
+            status=status,
+            json=arti_get_repos,
+        )
+    elif status == 403:
+        responses.add(
+            responses.GET,
+            url="http://ottvmartifact.win.ansys.com:8080/artifactory/api/repositories",
+            status=status,
+            json={"errors": ["Bad credentials"]},
+        )
+    else:
+        responses.add(
+            responses.GET,
+            url="http://ottvmartifact.win.ansys.com:8080/artifactory/api/repositories",
+            status=status,
+            json={"errors": ["some error"]},
+        )
 
     responses.add(
         responses.GET,
@@ -360,13 +375,50 @@ def add_responses_for_repos(mocked_data, status=200):
         },
     )
 
+    # add responses for .stat()
+    responses.add(
+        responses.GET,
+        url="http://ottvmartifact.win.ansys.com:8080/artifactory/api/storage/v221_Certified",
+        status=200,
+        json={
+            "repo": "v221_Certified-cache",
+            "path": "/",
+            "created": "2020-04-29T18:50:05.135+02:00",
+            "lastModified": "2020-04-29T18:50:05.135+02:00",
+            "lastUpdated": "2020-04-29T18:50:05.135+02:00",
+            "children": [{"uri": "/linx64", "folder": True}, {"uri": "/winx64", "folder": True}],
+            "uri": "http://ottvmartifact.win.ansys.com:8080/artifactory/api/storage/v221_Certified-cache",
+        },
+    )
+
+    responses.add(
+        responses.GET,
+        url="http://ottvmartifact.win.ansys.com:8080/artifactory/api/storage/v221_Licensing_Certified",
+        status=200,
+        json={
+            "repo": "v221_Licensing_Certified-cache",
+            "path": "/",
+            "created": "2020-09-22T16:50:03.439+02:00",
+            "lastModified": "2020-09-22T16:50:03.439+02:00",
+            "lastUpdated": "2020-09-22T16:50:03.439+02:00",
+            "children": [
+                {"uri": "/enterprise", "folder": True},
+                {"uri": "/licregs", "folder": True},
+                {"uri": "/linx64", "folder": True},
+                {"uri": "/lsclient", "folder": True},
+                {"uri": "/winx64", "folder": True},
+            ],
+            "uri": "http://ottvmartifact.win.ansys.com:8080/artifactory/api/storage/v221_Licensing_Certified-cache",
+        },
+    )
+
 
 def add_responses_for_aedt_folders():
     arti_link = "http://ottvmartifact.win.ansys.com:8080/artifactory"
     for date in ["20210901", "20210902", "20210903"]:
         responses.add(
             responses.GET,
-            url=f"{arti_link}/api/storage/v221_EBU_Certified/{date}",
+            url=f"{arti_link}/api/storage/v221_EBU_Certified-cache/{date}",
             status=200,
             json={
                 "repo": "v221_EBU_Certified-cache",
@@ -387,7 +439,7 @@ def add_responses_for_aedt_folders():
 
     responses.add(
         responses.GET,
-        url=f"{arti_link}/api/storage/v221_EBU_Certified/Electronics_221_winx64",
+        url=f"{arti_link}/api/storage/v221_EBU_Certified-cache/Electronics_221_winx64",
         status=200,
         json={
             "repo": "v221_EBU_Certified-cache",
@@ -401,19 +453,12 @@ def add_responses_for_aedt_folders():
     )
 
 
-class ArtifactoryElectronicsTest(BaseSetup):
-    def setUp(self, settings_file=""):
-        super().setUp("v221_ElectronicsDesktop_arti.json")
-
-    @responses.activate
-    def test_get_build_link(self):
-        add_responses_for_repos(self.mocked_data)
-
-        artifactory_link = "http://ottvmartifact.win.ansys.com:8080/artifactory"
-        bld_path = f"{artifactory_link}/api/storage/v221_EBU_Certified"
+def add_aedt_responses(artifactory_link):
+    bld_path = f"{artifactory_link}/api/storage/v221_EBU_Certified"
+    for url in [bld_path, bld_path + "-cache"]:
         responses.add(
             responses.GET,
-            url=bld_path,
+            url=url,
             status=200,
             json={
                 "repo": "v221_EBU_Certified-cache",
@@ -430,13 +475,25 @@ class ArtifactoryElectronicsTest(BaseSetup):
                 "uri": f"{artifactory_link}/api/storage/v221_EBU_Certified-cache",
             },
         )
+
+
+class ArtifactoryElectronicsTest(BaseSetup):
+    def setUp(self, settings_file=""):
+        super().setUp("v221_ElectronicsDesktop_arti.json")
+
+    @responses.activate
+    def test_get_build_link(self):
+        add_responses_for_repos(self.mocked_data)
+
+        artifactory_link = "http://ottvmartifact.win.ansys.com:8080/artifactory"
+        add_aedt_responses(artifactory_link)
         add_responses_for_aedt_folders()
         self.downloader.get_build_link()
 
         self.assertIsInstance(self.downloader.build_artifactory_path, downloader_backend.ArtifactoryPath)
         self.assertEqual(
             str(self.downloader.build_artifactory_path),
-            f"{artifactory_link}/v221_EBU_Certified/20210903/Electronics_221_winx64.zip",
+            f"{artifactory_link}/v221_EBU_Certified-cache/20210903/Electronics_221_winx64.zip",
         )
 
     @responses.activate
@@ -447,10 +504,7 @@ class ArtifactoryElectronicsTest(BaseSetup):
 
         self.assertEqual(
             str(err.exception),
-            (
-                "Cannot retrieve repositories. Error: 404 Client Error: Not Found for "
-                "url: http://ottvmartifact.win.ansys.com:8080/artifactory/api/repositories"
-            ),
+            ("Cannot retrieve repositories. Error: some error"),
         )
 
     @responses.activate
@@ -461,7 +515,7 @@ class ArtifactoryElectronicsTest(BaseSetup):
 
         self.assertEqual(
             str(err.exception),
-            "Bad credentials, please verify your username and password for Otterfing",
+            "Cannot retrieve repositories. Error: Bad credentials",
         )
 
     def test_get_build_link_error_auth(self):
@@ -538,12 +592,14 @@ class ArtifactoryWorkbenchTest(BaseSetup):
     @responses.activate
     def test_get_build_link(self):
         add_responses_for_repos(self.mocked_data)
+        artifactory_link = "http://ottvmartifact.win.ansys.com:8080/artifactory"
+        add_aedt_responses(artifactory_link)
         self.downloader.get_build_link()
 
         self.assertIsInstance(self.downloader.build_artifactory_path, downloader_backend.ArtifactoryPath)
         self.assertEqual(
             str(self.downloader.build_artifactory_path),
-            "http://ottvmartifact.win.ansys.com:8080/artifactory/v221_Certified-cache/winx64",
+            f"{artifactory_link}/v221_Certified-cache/winx64",
         )
 
     @responses.activate

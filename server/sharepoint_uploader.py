@@ -15,13 +15,13 @@ from office365.sharepoint.client_context import ClientContext
 from pid import PidFile
 from pid import PidFileError
 
-root_folder = os.path.abspath(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.append(root_folder)
+root_folder = Path(__file__).parent.parent.absolute()
+sys.path.append(str(root_folder))
 
+import downloader_backend as downloader_backend  # noqa: E402  # need for reimport!
 from downloader_backend import SHAREPOINT_SITE_URL  # noqa: E402
 from downloader_backend import Downloader  # noqa: E402
 from downloader_backend import retry  # noqa: E402
-from downloader_backend import set_logger  # noqa: E402
 
 app_principal = {"client_id": os.environ["client_id"], "client_secret": os.environ["client_secret"]}
 
@@ -40,7 +40,7 @@ def main():
 
     """
     settings_folder = r"/home/electron/downloader_settings"
-    set_logger(os.path.join(settings_folder, "uploader.log"))
+    downloader_backend.set_logger(os.path.join(settings_folder, "uploader.log"))
     with PidFile():
         for file in os.listdir(settings_folder):
             settings_file = os.path.join(settings_folder, file)
